@@ -45,6 +45,64 @@ vi app.js                # JS-Logik schreiben
 
 ---
 
+## 🛠️ Installation & Deployment (Von Null zur Live-App)
+
+Folge diesen Schritten, um eine neue App mit dem Generator zu erstellen und live zu schalten.
+
+### Schritt 1: Lokales Projekt erstellen
+
+```bash
+# Repository auf deinen Computer klonen
+git clone https://github.com/deinname/app-generator.git
+
+# Neue App aus der Vorlage erstellen
+cp -r template/ meine-neue-app/
+cd meine-neue-app/
+```
+
+### Schritt 2: Hosting & Server-Setup
+
+Deine App benötigt einen Webserver mit PHP- und MySQL-Unterstützung.
+
+- **Hoster wählen**: z. B. IONOS, Strato, All-Inkl.de
+- **Datenbank anlegen**: im Admin-Panel deines Hosters
+- **Dateien hochladen**: alle außer `app-config.json` und `generate_codes.php`
+- **Live-Konfiguration**: `app-config.json` direkt auf dem Server erstellen und mit Live-Zugangsdaten füllen
+
+### Schritt 3: Anwendung initialisieren
+
+- **Datenbanktabellen anlegen**:
+  `https://deine-live-domain.de/system/api.php?action=setup`
+- **Einladungscodes generieren**:
+  `generate_codes.php` hochladen, ausführen, danach wieder löschen
+
+### Schritt 4: Weiterentwickeln
+
+```bash
+vi index.php      # HTML-Grundgerüst deiner App
+vi app.js         # JavaScript-Logik deiner App
+```
+
+Lokaler Workflow: Änderungen lokal machen → auf GitHub pushen → auf Live-Server übertragen (FTP oder `git pull`).
+
+---
+
+## Die app-config.json verstehen
+
+Diese Datei ist das Herzstück deiner Anwendung. Eine kommentierte Vorlage findest du direkt im Projekt: `app-config.example.json`
+
+### Die wichtigsten Bereiche:
+
+- **"app_name"**: Der Name deiner App.
+- **"debug_mode"**: Aktiviert das Debug-Dashboard (`true` oder `false`).
+- **"database"**: Verbindungs-String zu deiner MySQL-Datenbank.
+- **"tables_sql"**: Eine Liste deiner `CREATE TABLE`-Statements.
+- **"form_mappings"**: Verknüpft `formId`s aus dem Frontend mit DB-Tabellen – damit `System.save()` & `System.load()` wissen, wohin die Daten gehören.
+
+> 🧠 **Tipp**: Verändere nie direkt die produktive `app-config.json` im Repository. Nutze `.gitignore`, um sensible Daten auszuschließen.
+
+---
+
 ## 🔐 Sicherheit (automatisch integriert)
 
 - Alle Queries per Prepared Statements
@@ -127,6 +185,8 @@ Auth.updateUserDisplay();                        // Begrüßung updaten
 - Form-Mappings
 - Login-Versuche
 - API-Log & Fehleranzeige
+
+> 📸 [Hier Screenshot des Dashboards einfügen]
 
 ---
 
