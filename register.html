@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Registrieren</title>
+</head>
+<body>
+
+    <h2>Registrieren</h2>
+    <form id="registerForm">
+        <div>
+            <label for="invitation_code">Einladungscode:</label>
+            <input type="text" id="invitation_code" name="invitation_code" required>
+        </div>
+        <div>
+            <label for="username">Benutzername:</label>
+            <input type="text" id="username" name="username" required>
+        </div>
+        <div>
+            <label for="email">E-Mail:</label>
+            <input type="email" id="email" name="email" required>
+        </div>
+        <div>
+            <label for="password">Passwort:</label>
+            <input type="password" id="password" name="password" required>
+        </div>
+        <div>
+            <label for="password_confirm">Passwort bestätigen:</label>
+            <input type="password" id="password_confirm" name="password_confirm" required>
+        </div>
+        <div id="registerFormError" style="color: red;"></div>
+        <button type="submit">Account erstellen</button>
+    </form>
+    <p>Bereits einen Account? <a href="login.html">Hier einloggen</a>.</p>
+
+    <script src="/system/system.js"></script>
+    <script src="/system/auth.js"></script>
+    <script>
+        // Bindet die komplette Registrierungs-Logik an das Formular
+        Auth.bindForm('registerForm', (result) => {
+            alert(result.message); // Zeige Erfolgsmeldung
+            if (result.success) {
+                window.location.href = 'login.html'; // Leite zum Login weiter
+            }
+        });
+
+        function showRegisterFormError(message) {
+            const errorElement = document.getElementById('registerFormError');
+            errorElement.textContent = message;
+        }
+    </script>
+</body>
+</html>

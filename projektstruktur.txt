@@ -1,0 +1,14 @@
+DEIN-PROJEKTORDNER/
+├── 📂 system/
+│   ├── 📄 api.php
+│   ├── 📄 auth.js
+│   ├── 📄 debug.php
+│   └── 📄 system.js
+├── 📄 .gitignore
+├── 📄 app-config.example.json
+├── 📄 app.js
+├── 📄 generate_codes.php
+├── 📄 index.php
+├── 📄 login.html
+├── 📄 README.md
+└── 📄 register.html

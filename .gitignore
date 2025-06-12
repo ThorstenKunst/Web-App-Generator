@@ -1,0 +1,17 @@
+# Konfigurationsdatei mit sensitiven Daten
+app-config.json
+
+# Utility-Skripte
+generate_codes.php
+
+# Systemdateien von macOS und Windows
+.DS_Store
+Thumbs.db
+
+# Log-Dateien
+*.log
+logs/
+
+# Lokale Editor-Konfigurationen
+.vscode/
+.idea/
