@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Meine Health App</title>
+    <!-- Hier käme optional ein Link zu einer CSS-Datei -->
+</head>
+<body>
+
+    <header>
+        <h1 id="userWelcome">Willkommen!</h1>
+        <nav>
+            <a href="/system/debug.php" target="_blank">Debug Dashboard</a>
+            <a href="#" id="logoutButton">Logout</a>
+        </nav>
+    </header>
+
+    <main id="app">
+        <h2>Mein Tag</h2>
+        <p>Hier ist eine Übersicht deiner täglichen Protokolle.</p>
+
+        <!-- 
+          BEISPIEL: Einbettung einer Web Component.
+          Dies ist der einzige Teil, den der GPT im HTML hinzufügen muss.
+          Die gesamte komplexe Logik ist in der Komponente selbst gekapselt.
+        -->
+        <mood-tracker></mood-tracker>
+
+    </main>
+
+    <!-- Einbindung der System-Skripte und der App-Logik -->
+    <script src="/system/system.js"></script>
+    <script src="/system/auth.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

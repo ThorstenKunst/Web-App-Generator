@@ -1,0 +1,20 @@
+{
+  "app_name": "Coach App",
+  "debug_mode": true,
+  "database": "mysql://USER:PASSWORD@localhost/DATABASE",
+  "api_keys": {
+    "openai": "sk-xxx-REPLACE_ME"
+  },
+  "tables_sql": [
+    "CREATE TABLE IF NOT EXISTS protokolle (id INT NOT NULL AUTO_INCREMENT, user_id INT NOT NULL, datum DATE NOT NULL, gewicht DECIMAL(5,2) DEFAULT NULL, schlafqualitaet TINYINT DEFAULT NULL COMMENT 'Skala 0-10', stress_level TINYINT DEFAULT NULL COMMENT 'Skala 0-10', stress_ursache_text TEXT DEFAULT NULL, energielevel TINYINT DEFAULT NULL COMMENT 'Skala 0-10', libido TINYINT DEFAULT NULL COMMENT 'Skala 0-10', morgenerektion TINYINT DEFAULT 0 COMMENT '0=Nein, 1=Ja', verdauung_ok TINYINT DEFAULT NULL COMMENT '0=Nein, 1=Ja', wasser TINYINT DEFAULT 0 COMMENT 'Angepasst: 0=Nein, 1=Ja', ejakulation_ja_nein TINYINT DEFAULT 0 COMMENT '0=Nein, 1=Ja', stimulation_solo TINYINT DEFAULT 0 COMMENT '0=Nein, 1=Ja', stimulation_partner TINYINT DEFAULT 0 COMMENT '0=Nein, 1=Ja', stimulation_porno TINYINT DEFAULT 0 COMMENT '0=Nein, 1=Ja', stimulation_kultiviert TINYINT DEFAULT 0 COMMENT '0=Nein, 1=Ja', stimulation_prostata TINYINT DEFAULT 0 COMMENT '0=Nein, 1=Ja', stimulation_elektro TINYINT DEFAULT 0 COMMENT '0=Nein, 1=Ja', penislaenge DECIMAL(4,1) DEFAULT NULL, penisumfang DECIMAL(4,1) DEFAULT NULL, peniswinkel TINYINT DEFAULT NULL COMMENT '1=schwach, 2=horizontal, 3=gut, 4=steil', jelqing_minuten TINYINT UNSIGNED DEFAULT 0, vakuumpumpe_minuten TINYINT UNSIGNED DEFAULT 0, ernaehrung_fruehstueck TEXT DEFAULT NULL, ernaehrung_mittag TEXT DEFAULT NULL, ernaehrung_abend TEXT DEFAULT NULL, ernaehrung_snacks TEXT DEFAULT NULL, training_brust_bizeps TINYINT DEFAULT 0, training_ruecken_trizeps TINYINT DEFAULT 0, training_beine_rumpf TINYINT DEFAULT 0, training_yoga_meditation TINYINT DEFAULT 0, training_pc_muskel TINYINT DEFAULT 0, schmerz_symptome_text TEXT DEFAULT NULL, bemerkungen TEXT DEFAULT NULL, feedback TEXT DEFAULT NULL, created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, PRIMARY KEY (id), UNIQUE KEY (user_id, datum))",
+    "CREATE TABLE IF NOT EXISTS user_profiles (user_id INT NOT NULL, koerpergroesse_cm SMALLINT DEFAULT NULL, geburtsdatum DATE DEFAULT NULL, koerperbau_beschreibung TEXT DEFAULT NULL, morgen_routine TEXT DEFAULT NULL, weitere_supplemente TEXT DEFAULT NULL, trainingsplan TEXT DEFAULT NULL, diaetplan_ernaehrungsphilosophie TEXT DEFAULT NULL, ernaehrungsweise ENUM('omnivor','vegetarisch','vegan','andere') DEFAULT NULL, unvertraeglichkeiten_allergien TEXT DEFAULT NULL, show_sexual_activities TINYINT DEFAULT 1, coach_persona_type ENUM('male_direct', 'female_strict_witty', 'neutral_factual') DEFAULT 'neutral_factual', created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, PRIMARY KEY (user_id))",
+    "CREATE TABLE IF NOT EXISTS users (id INT NOT NULL AUTO_INCREMENT, username VARCHAR(50) NOT NULL, email VARCHAR(100) NOT NULL, password_hash VARCHAR(255) NOT NULL, created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (id), UNIQUE KEY username (username), UNIQUE KEY email (email))",
+    "CREATE TABLE IF NOT EXISTS login_attempts (id INT AUTO_INCREMENT PRIMARY KEY, ip_address VARCHAR(45) NOT NULL, username VARCHAR(100), attempt_time DATETIME NOT NULL)",
+    "CREATE TABLE IF NOT EXISTS invitation_codes (code VARCHAR(32) PRIMARY KEY, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, used_by INT DEFAULT NULL, used_at TIMESTAMP NULL, FOREIGN KEY (used_by) REFERENCES users(id))"
+  ],
+  "form_mappings": {
+    "dailyForm": "protokolle",
+    "masterDataForm": "user_profiles",
+    "loginForm": "users"
+  }
+}
