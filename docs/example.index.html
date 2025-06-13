@@ -2,35 +2,43 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Meine Health App</title>
-    <!-- Hier käme optional ein Link zu einer CSS-Datei -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BaaS-Dev App</title>
 </head>
 <body>
 
-    <header>
-        <h1 id="userWelcome">Willkommen!</h1>
-        <nav>
-            <a href="/system/debug.php" target="_blank">Debug Dashboard</a>
-            <a href="#" id="logoutButton">Logout</a>
-        </nav>
-    </header>
+    <!-- Die App-Struktur wird rein deklarativ mit den Komponenten gebaut -->
+    <app-header title="Mein Dashboard"></app-header>
 
-    <main id="app">
-        <h2>Mein Tag</h2>
-        <p>Hier ist eine Übersicht deiner täglichen Protokolle.</p>
+    <main>
+        <app-message type="info">Willkommen zurück! Hier ist dein heutiger Überblick.</app-message>
 
-        <!-- 
-          BEISPIEL: Einbettung einer Web Component.
-          Dies ist der einzige Teil, den der GPT im HTML hinzufügen muss.
-          Die gesamte komplexe Logik ist in der Komponente selbst gekapselt.
-        -->
-        <mood-tracker></mood-tracker>
+        <section-box title="Heutige Werte">
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <value-tile id="tile-gewicht" label="Gewicht" value="--" suffix="kg"></value-tile>
+                <value-tile id="tile-schlaf" label="Schlaf" value="--"></value-tile>
+            </div>
+        </section-box>
 
+        <section-box title="Tagesprotokoll">
+            <range-slider label="Heutiges Stresslevel" name="stress_level"></range-slider>
+            <textarea-field label="Notizen für heute" name="notizen"></textarea-field>
+            <sticky-footer>
+                <form-button id="save-button" label="Tag speichern"></form-button>
+            </sticky-footer>
+        </section-box>
     </main>
 
-    <!-- Einbindung der System-Skripte und der App-Logik -->
+    <!--
+      BEST PRACTICE:
+      1. Lade zuerst alle Web Components automatisch mit dem PHP-Loader.
+      2. Lade dann die System-Bibliothek.
+      3. Lade ZULETZT die app.js, die die Business-Logik enthält und
+         auf die zuvor geladenen Komponenten und Systeme zugreift.
+    -->
+    <?php include __DIR__ . '/system/loader.php'; ?>
     <script src="/system/system.js"></script>
-    <script src="/system/auth.js"></script>
     <script src="app.js"></script>
+
 </body>
 </html>

@@ -1,108 +1,96 @@
 /**
- * BEISPIEL: Web Component für einen "Mood-Tracker"
- * Diese Klasse demonstriert Best Practices für den BaaS-Generator.
+ * beispiel.app.js
  *
- * 1.  Daten werden über System.load() geladen.
- * 2.  Daten werden über System.save() gespeichert.
- * 3.  Die gesamte UI und Logik ist in der Komponente gekapselt.
- * 4.  Shadow DOM wird verwendet, um Styling-Konflikte zu vermeiden.
+ * Dies ist die "Gehirn"-Logik für die in index.php deklarierte UI.
+ * Sie demonstriert die Architektur des Systems perfekt.
  */
-class MoodTracker extends HTMLElement {
-    constructor() {
-        super();
-        // Shadow DOM für Kapselung erstellen
-        this.attachShadow({ mode: 'open' });
 
-        // Initialen Zustand setzen
-        this.today = new Date().toISOString().split('T')[0];
-        this.moodData = null; // Hier speichern wir die geladenen Daten
-    }
+// #################################################################
+// BEST PRACTICE: DATENLOGIK IN EINEM HELFER ZENTRALISIEREN
+// Diese Klasse kümmert sich ausschließlich um das Laden, Speichern
+// und Cachen von Anwendungsdaten.
+// #################################################################
+const DataHelper = {
+    todayDataCache: null,
 
-    // Wird aufgerufen, wenn die Komponente zum DOM hinzugefügt wird
-    connectedCallback() {
-        this.loadMoodForToday();
-    }
-
-    /**
-     * Lädt die Daten für den heutigen Tag mit System.load()
-     */
-    async loadMoodForToday() {
-        // 'moodForm' ist der mappingName aus der app-config.json
-        const result = await System.load('moodForm', { datum: this.today });
-        if (result.success && result.data.length > 0) {
-            this.moodData = result.data[0];
+    async getTodayData() {
+        if (this.todayDataCache === null) {
+            console.log('Lade Tagesdaten vom Server...');
+            const result = await System.load('dailyForm', { datum: new Date().toISOString().split('T')[0] });
+            this.todayDataCache = (result.success && result.data.length > 0) ? result.data[0] : {};
         }
-        this.render(); // UI nach dem Laden (neu) zeichnen
-    }
+        return this.todayDataCache;
+    },
 
-    /**
-     * Speichert die Formulardaten mit System.save()
-     * @param {Event} e Das Formular-Submit-Event
-     */
-    async saveMood(e) {
-        e.preventDefault();
-        const form = e.target;
-        const formData = new FormData(form);
-        const data = Object.fromEntries(formData.entries());
-        data.datum = this.today; // Sicherstellen, dass das Datum gesetzt ist
-
-        // Wenn bereits ein Eintrag existiert, dessen ID für den UPDATE mitgeben
-        if (this.moodData && this.moodData.id) {
-            data.id = this.moodData.id;
+    async saveTodayData(data) {
+        if (this.todayDataCache && this.todayDataCache.id) {
+            data.id = this.todayDataCache.id;
         }
-
-        const result = await System.save('moodForm', data);
+        const result = await System.save('dailyForm', data);
         if (result.success) {
-            // Lokalen Zustand aktualisieren und UI neu zeichnen
-            this.moodData = { ...this.moodData, ...data, id: result.id };
-            this.render();
-            alert('Stimmung gespeichert!');
-        } else {
-            console.error("Fehler beim Speichern der Stimmung:", result.message);
-            alert("Es gab einen Fehler beim Speichern.");
+            this.todayDataCache = { ...this.todayDataCache, ...data, id: result.id };
+            console.log('Daten erfolgreich gespeichert und Cache aktualisiert.');
+            return true;
         }
+        return false;
+    }
+};
+
+// #################################################################
+// BUSINESS-LOGIK: DER "DIRIGENT" DER ANWENDUNG
+// Dieser Teil startet, wenn die Seite geladen ist. Er verbindet die
+// UI-Komponenten mit der Datenlogik des DataHelpers.
+// #################################################################
+document.addEventListener('DOMContentLoaded', () => {
+
+    // 1. Referenzen auf die UI-Komponenten aus dem DOM holen
+    const gewichtTile = document.getElementById('tile-gewicht');
+    const schlafTile = document.getElementById('tile-schlaf');
+    const stressSlider = document.querySelector('range-slider[name="stress_level"]');
+    const notizenArea = document.querySelector('textarea-field[name="notizen"]');
+    const saveButton = document.getElementById('save-button');
+
+    /**
+     * Füllt die UI-Komponenten mit den Daten aus dem DataHelper.
+     * Trennt die Datenlogik (getTodayData) von der UI-Logik (setAttribute/value).
+     */
+    async function populateUI() {
+        const data = await DataHelper.getTodayData();
+
+        // Visualisierungs-Komponenten aktualisieren
+        gewichtTile.setAttribute('value', data.gewicht || '--');
+        schlafTile.setAttribute('value', data.schlafqualitaet || '--');
+
+        // Formular-Komponenten füllen
+        stressSlider.value = data.stress_level || 3;
+        notizenArea.value = data.notizen || '';
     }
 
     /**
-     * Zeichnet das komplette HTML der Komponente
+     * Sammelt die aktuellen Werte aus den Formular-Komponenten und
+     * übergibt sie an den DataHelper zum Speichern.
      */
-    render() {
-        // Aktuelle Werte aus dem Zustand oder Standardwerte verwenden
-        const currentMood = this.moodData ? parseInt(this.moodData.stimmung) : 3;
-        const currentNotiz = this.moodData ? this.moodData.notiz : '';
+    async function handleSave() {
+        const dataToSave = {
+            stress_level: stressSlider.value,
+            notizen: notizenArea.value,
+            // Das Feld 'gewicht' wird hier nicht gespeichert, da es kein Eingabefeld ist.
+        };
 
-        this.shadowRoot.innerHTML = `
-            <style>
-                /* Minimales internes Styling für die Komponente */
-                div { border: 1px solid #ccc; padding: 15px; border-radius: 5px; margin-top: 20px; }
-                form { display: flex; flex-direction: column; gap: 10px; }
-                button { cursor: pointer; padding: 5px 10px; }
-            </style>
-            <div>
-                <h3>Heutige Stimmung</h3>
-                <form>
-                    <label>Stimmung (1=schlecht, 5=super): <span>${currentMood}</span></label>
-                    <input type="range" name="stimmung" min="1" max="5" value="${currentMood}">
-                    
-                    <label>Notiz:</label>
-                    <textarea name="notiz">${currentNotiz}</textarea>
-                    
-                    <button type="submit">Speichern</button>
-                </form>
-            </div>
-        `;
-
-        // Event Listeners nach dem Rendern binden
-        this.shadowRoot.querySelector('form').addEventListener('submit', (e) => this.saveMood(e));
-        
-        const rangeInput = this.shadowRoot.querySelector('input[type="range"]');
-        const rangeValueSpan = this.shadowRoot.querySelector('span');
-        rangeInput.addEventListener('input', () => {
-            rangeValueSpan.textContent = rangeInput.value;
-        });
+        saveButton.disabled = true; // Button deaktivieren
+        const success = await DataHelper.saveTodayData(dataToSave);
+        if (success) {
+            alert('Gespeichert!');
+            await populateUI(); // UI mit den frisch gespeicherten Daten aktualisieren
+        } else {
+            alert('Fehler beim Speichern.');
+        }
+        saveButton.disabled = false; // Button wieder aktivieren
     }
-}
 
-// Die Web Component für den Browser registrieren
-customElements.define('mood-tracker', MoodTracker);
+    // Event Listener für den Speicher-Button mit der Logik verbinden
+    saveButton.addEventListener('click', handleSave);
 
+    // Die App initial mit Daten befüllen, wenn sie startet
+    populateUI();
+});

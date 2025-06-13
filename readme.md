@@ -2,13 +2,26 @@
 
 Ein minimalistischer Backend-as-a-Service (BaaS) Generator für PHP, MySQL und Vanilla JS. Entwickle datengetriebene Web-Apps blitzschnell, ohne dich um Backend-Logik kümmern zu müssen.
 
-> 💡 **Hinweis für GPT**: Dieses Projekt ist GPT-kompatibel. GPT soll Web Components, HTML-Formulare und JS-Logik auf Basis von `System.save()` und `System.load()` erzeugen. Kein CSS, keine Frameworks.
+> 🤖 **Hinweis für GPT-Systeme:** Dieses Repository ist vollständig GPT-kompatibel. GPTs können damit eigenständig Web Components, HTML-Formulare und JS-Logik erzeugen – basierend auf `app-config.json`, `System.save()` und `System.load()`. Kein CSS, keine Frameworks, kein Overhead.
+
+---
+
+## 🤖 Entwicklungs-Assistent (GPT)
+
+Um die Entwicklung mit diesem Generator weiter zu beschleunigen, gibt es einen spezialisierten GPT-Assistenten, der vollständig auf das deklarative Baukastensystem trainiert ist.
+
+Er hilft dir dabei:
+- neue Features zu entwickeln,
+- Datenstrukturen in `app-config.json` korrekt zu definieren,
+- und die passende Logik in `app.js` umzusetzen.
+
+➡️ [Zur vollständigen GPT-Anleitung](https://github.com/ThorstenKunst/Web-App-Generator/tree/main/docs/gpt-instructions.md)
 
 ---
 
 ## ✨ Kernprinzip
 
-Der Generator eliminiert repetitiven Backend-Code. Du konzentrierst dich auf:
+Der Generator eliminiert repetitiven Backend-Code. Du (oder ein GPT) konzentrierst dich auf:
 
 - `index.php`, `login.html`: Visuelle Darstellung (HTML)
 - `app.js`: Interaktivität und Business-Logik
@@ -29,11 +42,11 @@ Das Backend wird automatisch zur Laufzeit über `api.php` und `app-config.json` 
 
 ---
 
-## 🛠️ Setup (Quickstart)
+## 💪 Setup (Quickstart)
 
 ```bash
 # Repo klonen
-git clone https://github.com/deinname/app-generator.git
+git clone https://github.com/ThorstenKunst/Web-App-Generator.git
 
 # Neue App starten
 cp -r template/ meine-neue-app/
@@ -47,13 +60,11 @@ vi app.js                # JS-Logik schreiben
 
 ## 🛠️ Installation & Deployment (Von Null zur Live-App)
 
-Folge diesen Schritten, um eine neue App mit dem Generator zu erstellen und live zu schalten.
-
 ### Schritt 1: Lokales Projekt erstellen
 
 ```bash
 # Repository auf deinen Computer klonen
-git clone https://github.com/deinname/app-generator.git
+git clone https://github.com/ThorstenKunst/Web-App-Generator.git
 
 # Neue App aus der Vorlage erstellen
 cp -r template/ meine-neue-app/
@@ -62,61 +73,141 @@ cd meine-neue-app/
 
 ### Schritt 2: Hosting & Server-Setup
 
-Deine App benötigt einen Webserver mit PHP- und MySQL-Unterstützung.
-
-- **Hoster wählen**: z. B. IONOS, Strato, All-Inkl.de
-- **Datenbank anlegen**: im Admin-Panel deines Hosters
+- **Webserver mit PHP/MySQL**: z. B. IONOS, Strato, All-Inkl.de
+- **Datenbank anlegen**: im Hoster-Panel
 - **Dateien hochladen**: alle außer `app-config.json` und `generate_codes.php`
-- **Live-Konfiguration**: `app-config.json` direkt auf dem Server erstellen und mit Live-Zugangsdaten füllen
+- **Live-Konfiguration**: `app-config.json` direkt auf dem Server mit Zugangsdaten füllen
 
 ### Schritt 3: Anwendung initialisieren
 
-- **Datenbanktabellen anlegen**:
-  `https://deine-live-domain.de/system/api.php?action=setup`
-- **Einladungscodes generieren**:
-  `generate_codes.php` hochladen, ausführen, danach wieder löschen
+- Setup aufrufen:  `https://deine-domain.de/system/api.php?action=setup`
+- Einladungscodes erzeugen: `generate_codes.php` hochladen, ausführen, dann löschen
 
 ### Schritt 4: Weiterentwickeln
+Die Hauptarbeit findet in index.php und app.js statt.
 
-```bash
-vi index.php      # HTML-Grundgerüst deiner App
-vi app.js         # JavaScript-Logik deiner App
+index.php (Die Struktur)
+Hier baust du deine Benutzeroberfläche deklarativ mit den vordefinierten Web Components zusammen. Damit die Komponenten funktionieren, müssen sie über den automatischen loader.php eingebunden werden.
+```php
+<!-- beispiel.index.php -->
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Meine App</title>
+</head>
+<body>
+    <app-header title="Dashboard"></app-header>
+    <main>
+        <section-box title="Tagesprotokoll">
+            <input-field label="Gewicht" name="gewicht"></input-field>
+        </section-box>
+    </main>
+
+    <!--
+      WICHTIG: Die Ladereihenfolge ist entscheidend!
+      1. Komponenten laden (damit die Tags im HTML bekannt sind)
+      2. System-Bibliothek laden
+      3. Eigene App-Logik laden (die auf alles zugreift)
+    -->
+    <?php include __DIR__ . '/system/loader.php'; ?>
+    <script src="/system/system.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
 ```
 
-Lokaler Workflow: Änderungen lokal machen → auf GitHub pushen → auf Live-Server übertragen (FTP oder `git pull`).
+app.js (Die Logik)
+Hier schreibst du die JavaScript-Logik, die die Komponenten mit Leben füllt.
+```JS
+document.addEventListener('DOMContentLoaded', () => {
+    // Logik hier...
+});
+```
+---
+
+## 🚀 Best Practices: Datenzugriff effizient gestalten
+
+Statt in jeder Web Component direkt `System.load()` aufzurufen, verwende eine zentrale DataHelper-Klasse, um häufig genutzte Daten (z. B. Profil, heutige Einträge) nur **einmalig** zu laden und lokal zwischenzuspeichern.
+
+### Vorteile:
+
+- Weniger API-Calls
+- Mehr Performance
+- Saubere Komponenten
+
+### Beispiel: Globale DataManager-Klasse
+
+```js
+class DataManager {
+    constructor() {
+        this.userProfile = null;
+    }
+
+    async getProfile() {
+        if (this.userProfile === null) {
+            const result = await System.load('userProfileForm', {});
+            this.userProfile = (result.success && result.data.length > 0) ? result.data[0] : {};
+        }
+        return this.userProfile;
+    }
+
+    async saveProfile(data) {
+        const result = await System.save('userProfileForm', data);
+        if (result.success) {
+            this.userProfile = { ...this.userProfile, ...data, id: result.id };
+        }
+        return result;
+    }
+}
+
+const DataHelper = new DataManager();
+```
+
+### Verwendung in Web Components
+
+```js
+class ProfileEditor extends HTMLElement {
+    async connectedCallback() {
+        const profile = await DataHelper.getProfile();
+        this.render(profile);
+    }
+
+    render(profile) {
+        this.innerHTML = `<h3>Profil bearbeiten</h3><p>Körpergröße: ${profile.koerpergroesse_cm || 'k.A.'}</p>`;
+    }
+}
+customElements.define('profile-editor', ProfileEditor);
+```
 
 ---
 
-## Die app-config.json verstehen
+## 🧠 app-config.json im Detail
 
-Diese Datei ist das Herzstück deiner Anwendung. Eine kommentierte Vorlage findest du direkt im Projekt: `app-config.example.json`
+Zentrale Konfigurationsdatei – steuert Datenbank, Formulare, Auth.
 
-### Die wichtigsten Bereiche:
+### Wichtige Felder:
 
-- **"app_name"**: Der Name deiner App.
-- **"debug_mode"**: Aktiviert das Debug-Dashboard (`true` oder `false`).
-- **"database"**: Verbindungs-String zu deiner MySQL-Datenbank.
-- **"tables_sql"**: Eine Liste deiner `CREATE TABLE`-Statements.
-- **"form_mappings"**: Verknüpft `formId`s aus dem Frontend mit DB-Tabellen – damit `System.save()` & `System.load()` wissen, wohin die Daten gehören.
+- **"app_name"**: App-Titel
+- **"debug_mode"**: Debug-Interface aktivieren (`true/false`)
+- **"database"**: Verbindungsdaten zur MySQL-DB
+- **"tables_sql"**: Liste von `CREATE TABLE`-Statements
+- **"form_mappings"**: Verknüpft Formulare mit DB-Tabellen (für `System.save()` / `System.load()`)
 
-> 🧠 **Tipp**: Verändere nie direkt die produktive `app-config.json` im Repository. Nutze `.gitignore`, um sensible Daten auszuschließen.
+> 🛡️ Konfigurationsdateien mit Zugangsdaten sollten nie ins Repo – via `.gitignore` ausschließen!
 
 ---
 
 ## 🔐 Sicherheit (automatisch integriert)
 
-- Alle Queries per Prepared Statements
-- Brute-Force-Schutz beim Login (5 Fehlversuche = IP-Sperre)
-- HTTP-only Cookies, SameSite=Lax
-- Datenzugriff strikt auf `user_id` des eingeloggten Nutzers begrenzt
+- Alle Queries via Prepared Statements
+- Login-Schutz nach 5 Fehlversuchen (IP-Block)
+- Cookies: HTTP-only, SameSite=Lax
+- Zugriff immer auf `user_id` beschränkt
 
 ---
 
 ## 👤 Benutzerverwaltung per Einladung
-
-Registrierungen erfolgen nur über gültige Einladungscodes.
-
-### Einladungscodes generieren
 
 ```php
 // generate_codes.php
@@ -136,18 +227,18 @@ $db->close();
 ?>
 ```
 
-> ⚠️ Die Datei nach Verwendung löschen oder schützen.
+> Nach Nutzung löschen oder absichern
 
 ---
 
-## 🧹 JavaScript-API (system.js)
+## 📦 JavaScript-API (system.js)
 
 ```js
-System.checkAuth();                         // Session prüfen
-System.logout();                            // Abmelden
-System.save('formId', datenObjekt);         // Speichern (insert/update)
-System.load('formId', filterObjekt);        // Laden (einzeln oder Liste)
-System.enableDebug();                       // API-Logging aktivieren
+System.checkAuth();                         // Prüft Login-Status
+System.logout();                            // Beendet Session
+System.save('formId', datenObjekt);         // Insert/Update
+System.load('formId', filterObjekt);        // Einträge laden
+System.enableDebug();                       // API-Debug aktivieren
 ```
 
 ### Beispiel:
@@ -167,47 +258,41 @@ Auth.bindForm('registerForm', (res) => {
   alert(res.message);
   window.location.href = 'login.html';
 });
-Auth.updateUserDisplay();                        // Begrüßung updaten
+Auth.updateUserDisplay();                        // Begrüßung aktualisieren
 ```
 
 ---
 
-## 🧪 Debug-Dashboard aktivieren
+## 🧪 Debug-Dashboard
 
-1. In `app-config.json`: `"debug_mode": true`
-2. Einloggen
-3. Im Browser öffnen: `/system/debug.php`
+- `"debug_mode": true` in `app-config.json`
+- Einloggen, dann `/system/debug.php` öffnen
 
 ### Zeigt:
 
-- Session-Daten live
-- DB-Status & Tabellenstruktur
+- Session-Daten, Tabellenstruktur
 - Form-Mappings
-- Login-Versuche
-- API-Log & Fehleranzeige
+- Login-Versuche, API-Log, Fehler
 
-> 📸 [Hier Screenshot des Dashboards einfügen]
+> 🖼️ (Platzhalter für Screenshot oder GIF)
 
 ---
 
-## 🧠 Für GPT & dich
+## 🤖 GPT-Use: App bauen in 3 Schritten
 
-Du willst eine neue App bauen?\
-Dann brauchst du nur:
+1. Tabelle in `app-config.json` definieren
+2. HTML-Formular mit passender `id` schreiben
+3. JavaScript mit `System.save()` und `System.load()` schreiben
 
-- eine definierte Tabelle (in `app-config.json`)
-- ein Formular mit entsprechender `id`
-- eine JS-Logik mit `System.save()` / `System.load()`
-
-GPT kann dir alles liefern – aus einem Satz.
+👉 GPT kann all das automatisiert erstellen – nutze dieses Repo als Engine.
 
 ---
 
 ## ✅ Status
 
-- Minimal, stabil, flexibel
-- Ideal für Microtools, Prototypen, Daten-Visualisierung, Coaching-Apps
-- Kein Framework nötig. Kein CSS. Kein Overhead.
+- Minimalistisch, stabil, offen
+- Ideal für Tools, Coaching-Apps, Dashboards
+- Kein CSS, kein Framework, kein Ballast
 
 ---
 
