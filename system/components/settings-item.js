@@ -7,22 +7,13 @@ class SettingsItem extends HTMLElement {
     }
 
     static get observedAttributes() {
-        // Beobachtet Änderungen an diesen Attributen, um die Komponente neu zu rendern.
         return ['icon', 'label', 'description'];
     }
 
     connectedCallback() {
         this.render();
-
-        // REFINEMENT: Macht das gesamte Element klickbar und löst ein Event aus.
-        // Das ist nützlich für Items, die als Links fungieren (z.B. "Stammdaten >").
         this.addEventListener('click', (e) => {
-            // Verhindern, dass der Klick ein Event auslöst, wenn der Benutzer
-            // direkt auf ein interaktives Element im Slot klickt (z.B. den Toggle-Switch).
-            if (e.target.closest('toggle-switch')) {
-                return;
-            }
-            
+            if (e.target.closest('toggle-switch')) return;
             this.dispatchEvent(new CustomEvent('item-click', {
                 bubbles: true,
                 composed: true
@@ -30,7 +21,6 @@ class SettingsItem extends HTMLElement {
         });
     }
 
-    // Rendert die Komponente neu, wenn sich ein Attribut ändert.
     attributeChangedCallback() {
         this.render();
     }
@@ -39,8 +29,6 @@ class SettingsItem extends HTMLElement {
         const icon = this.getAttribute('icon') || '';
         const label = this.getAttribute('label') || '';
         const description = this.getAttribute('description') || '';
-
-        // REFINEMENT: Fügt ein 'action'-Attribut hinzu. Wenn es gesetzt ist, wird ein ">"-Pfeil angezeigt.
         const hasAction = this.hasAttribute('action');
 
         this.shadowRoot.innerHTML = `
@@ -48,14 +36,13 @@ class SettingsItem extends HTMLElement {
                 :host {
                     display: block;
                     padding: 12px 16px;
-                    border-bottom: 1px solid #eee;
-                    background: white;
-                    /* Ändert den Cursor, wenn das Item eine Aktion hat (klickbar ist) */
+                    border-bottom: 1px solid var(--background-box-header);
+                    background: var(--background-box);
                     cursor: ${hasAction ? 'pointer' : 'default'};
                     transition: background-color 0.2s;
                 }
                 :host([action]:hover) {
-                    background-color: #f9f9f9;
+                    background-color: var(--background-box-header);
                 }
                 .row {
                     display: flex;
@@ -65,12 +52,12 @@ class SettingsItem extends HTMLElement {
                 .info {
                     display: flex;
                     align-items: center;
-                    gap: 16px; /* Etwas mehr Abstand */
+                    gap: 16px;
                 }
                 .icon {
                     font-size: 1.4rem;
                     opacity: 0.6;
-                    width: 24px; /* Feste Breite für Ausrichtung */
+                    width: 24px;
                     text-align: center;
                 }
                 .text {
@@ -82,13 +69,13 @@ class SettingsItem extends HTMLElement {
                 }
                 .description {
                     font-size: 0.9rem;
-                    color: #666;
+                    color: var(--color-neutral);
                 }
                 .action-slot {
-                    margin-left: auto; /* Sorgt dafür, dass der Slot immer rechts ist */
+                    margin-left: auto;
                 }
                 .chevron {
-                    color: #ccc;
+                    color: var(--color-neutral);
                     font-weight: bold;
                 }
             </style>
@@ -102,7 +89,6 @@ class SettingsItem extends HTMLElement {
                 </div>
                 <div class="action-slot">
                     <slot></slot>
-                    <!-- Zeigt den Pfeil nur an, wenn das 'action'-Attribut gesetzt ist und kein Element im Slot ist -->
                     ${hasAction && this.children.length === 0 ? `<span class="chevron">›</span>` : ''}
                 </div>
             </div>

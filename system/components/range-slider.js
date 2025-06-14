@@ -50,38 +50,31 @@ class RangeSlider extends HTMLElement {
 
     this.shadowRoot.innerHTML = `
       <style>
-        :host {
-          display: block;
-          margin: 16px 0;
-        }
-
+        :host { display: block; margin: 16px 0; }
         label {
           display: block;
           font-size: 0.9em;
           margin-bottom: 6px;
+          color: var(--text-color-dark);
         }
-
         .slider-container {
           position: relative;
           width: 100%;
         }
-
         .value-display {
           position: absolute;
           top: -28px;
-          background: #111;
-          color: #fff;
+          background: var(--text-color-dark);
+          color: var(--text-color-light);
           padding: 2px 8px;
-          border-radius: 6px;
+          border-radius: var(--border-radius);
           font-size: 0.9em;
           transform: translateX(-50%);
         }
-
         input[type="range"] {
           width: 100%;
           margin: 0;
         }
-
         .slider-labels {
           display: flex;
           justify-content: space-between;
@@ -89,7 +82,6 @@ class RangeSlider extends HTMLElement {
           margin-top: 4px;
         }
       </style>
-
       <label>${label}</label>
       <div class="slider-container">
         <div class="value-display">${value}</div>

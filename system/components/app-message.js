@@ -1,44 +1,60 @@
 // system/components/app-message.js
 
 class AppMessage extends HTMLElement {
-  constructor() {
-    super();
-    this.attachShadow({ mode: 'open' });
-  }
+    constructor() {
+        super();
+        this.attachShadow({ mode: 'open' });
+    }
 
-  connectedCallback() {
-    this.render();
-  }
+    connectedCallback() {
+        this.render();
+    }
 
-  render() {
-    const type = this.getAttribute('type') || 'info'; // 'info', 'alert', etc.
-    const background = type === 'info'
-      ? 'linear-gradient(90deg, #7f7fd5, #86a8e7)'
-      : type === 'alert'
-      ? 'linear-gradient(90deg, #ff6a6a, #ffb86c)'
-      : '#eee';
+    // Rendert neu, wenn sich das 'type'-Attribut ändert
+    static get observedAttributes() {
+        return ['type'];
+    }
 
-    this.shadowRoot.innerHTML = `
-      <style>
-        :host {
-          display: block;
-          margin: 16px 0;
+    attributeChangedCallback() {
+        this.render();
+    }
+
+    render() {
+        const type = this.getAttribute('type') || 'info';
+
+        // Wählt die passende CSS-Variable basierend auf dem Typ
+        let backgroundVar = 'var(--background-box)'; // Standard-Fallback
+        let colorVar = 'var(--text-color-dark)';
+
+        if (type === 'info') {
+            backgroundVar = 'var(--gradient-info, linear-gradient(to right, #8e9eab, #eef2f3))';
+            colorVar = 'var(--text-color-dark, #333)';
+        } else if (type === 'alert') {
+            backgroundVar = 'var(--gradient-alert, linear-gradient(to right, #ff6a6a, #ffb86c))';
+            colorVar = 'var(--text-color-light, white)';
         }
-        .message {
-          padding: 16px;
-          border-radius: 12px;
-          background: ${background};
-          color: white;
-          font-weight: 500;
-          font-size: 0.95rem;
-          box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-        }
-      </style>
-      <div class="message">
-        <slot></slot>
-      </div>
-    `;
-  }
+
+        this.shadowRoot.innerHTML = `
+            <style>
+                :host {
+                    display: block;
+                    margin: 16px 0;
+                }
+                .message {
+                    padding: 16px;
+                    border-radius: var(--border-radius, 12px);
+                    background: ${backgroundVar};
+                    color: ${colorVar};
+                    font-weight: 500;
+                    font-size: 0.95rem;
+                    box-shadow: var(--box-shadow, 0 2px 6px rgba(0,0,0,0.05));
+                }
+            </style>
+            <div class="message">
+                <slot></slot>
+            </div>
+        `;
+    }
 }
 
 customElements.define('app-message', AppMessage);

@@ -1,0 +1,27 @@
+/* /css/theme.css */
+
+:root {
+  /* Hauptfarben */
+  --primary-gradient: linear-gradient(to right, #7f7fd5, #86a8e7, #91eae4);
+  --primary-color: #86a8e7;
+  --text-color-light: white;
+  --text-color-dark: #333;
+
+  /* Hintergrundfarben */
+  --background-main: #f4f7fa;
+  --background-box: white;
+  --background-box-header: #f8f8f8;
+  --background-footer: rgba(255, 255, 255, 0.9);
+
+  /* Statusfarben */
+  --color-positive: #28a745;
+  --color-negative: #dc3545;
+  --color-neutral: #6c757d;
+  
+  /* NEU: Hintergrund für das Overlay */
+  --overlay-backdrop: rgba(0, 0, 0, 0.5);
+
+  /* Allgemeine Stile */
+  --border-radius: 12px;
+  --box-shadow: 0 2px 8px rgba(0,0,0,0.08);  
+}

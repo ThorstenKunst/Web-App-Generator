@@ -4,58 +4,33 @@ class ToggleSwitch extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
-        // Der interne Zustand wird durch das <input>-Element selbst verwaltet.
     }
 
     connectedCallback() {
-        // Initiales Rendern der Komponente
         this.render();
-
-        // Event-Listener für das interne <input>-Element.
-        // Wenn es sich ändert, leiten wir das Event nach außen weiter.
         this.shadowRoot.querySelector('input').addEventListener('change', (e) => {
-            // REFINEMENT: Den 'checked'-Zustand als Attribut auf dem Host-Element widerspiegeln.
-            // Das macht den Zustand im DOM sichtbar (z.B. für CSS-Selektoren wie `toggle-switch[checked]`)
             this.toggleAttribute('checked', e.target.checked);
-            
-            // Ein 'change'-Event von unserer Komponente auslösen, damit die Außenwelt darauf reagieren kann.
             this.dispatchEvent(new Event('change'));
         });
     }
 
-    /**
-     * Getter für den `checked`-Zustand.
-     * @returns {boolean}
-     */
     get checked() {
         return this.hasAttribute('checked');
     }
 
-    /**
-     * Setter für den `checked`-Zustand.
-     * @param {boolean} val
-     */
     set checked(val) {
         const isChecked = Boolean(val);
         this.shadowRoot.querySelector('input').checked = isChecked;
         this.toggleAttribute('checked', isChecked);
     }
-    
-    /**
-     * Getter für den `value` der Komponente, analog zu einem echten Formular-Element.
-     * @returns {string} - Gibt 'on' zurück wenn checked, sonst leer.
-     */
+
     get value() {
         return this.checked ? 'on' : '';
     }
 
-    /**
-     * Rendert das HTML und CSS der Komponente.
-     */
     render() {
         const label = this.getAttribute('label') || '';
         const name = this.getAttribute('name') || '';
-        // Der initiale 'checked'-Status wird direkt vom Attribut gelesen.
         const isChecked = this.hasAttribute('checked');
 
         this.shadowRoot.innerHTML = `
@@ -69,7 +44,7 @@ class ToggleSwitch extends HTMLElement {
                     user-select: none;
                 }
                 .label-text {
-                    font-family: inherit; /* Stellt sicher, dass die Schriftart der Seite übernommen wird */
+                    font-family: inherit;
                 }
                 .switch {
                     position: relative;
@@ -89,7 +64,7 @@ class ToggleSwitch extends HTMLElement {
                     left: 0;
                     right: 0;
                     bottom: 0;
-                    background-color: #ccc;
+                    background-color: var(--color-neutral);
                     border-radius: 34px;
                     transition: 0.2s;
                 }
@@ -100,12 +75,12 @@ class ToggleSwitch extends HTMLElement {
                     width: 16px;
                     left: 3px;
                     bottom: 3px;
-                    background-color: white;
+                    background-color: var(--text-color-light);
                     border-radius: 50%;
                     transition: 0.2s;
                 }
                 input:checked + .slider {
-                    background-color: #4caf50; /* Grün, wenn aktiv */
+                    background-color: var(--color-positive);
                 }
                 input:checked + .slider::before {
                     transform: translateX(18px);

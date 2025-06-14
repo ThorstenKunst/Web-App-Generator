@@ -31,6 +31,51 @@ Dieses Dokument zeigt praktische Anwendungsbeispiele für jede Komponente des Ba
 | \<value-tile\> | label, value, trend, chart, color | Kachel zur Darstellung eines Werts mit Verlauf. |
 | \<app-message\> | type="info" oder "alert" | Farbiger Hinweisbereich für Benutzer-Feedback. |
 
+#### **Slot-, Event- & Kontext-Definitionen**
+
+| Komponente | Slots | Events | Sichtbarkeitsbereich |
+| :---- | :---- | :---- | :---- |
+| \<app-header\> | – | nav-click, action-click | Global |
+| \<section-box\> | default, footer | toggle | main, overlay |
+| \<sticky-footer\> | default | – | main |
+| \<app-overlay\> | header, body | overlay-open, overlay-close | Global |
+| \<settings-item\> | default | item-click | overlay (spez. Settings) |
+| \<modal-dialog\> | default | confirm, cancel | Global |
+| \<input-field\> | – | input, change | Formulare |
+| \<textarea-field\> | – | input, change | Formulare |
+| \<range-slider\> | – | change | Formulare |
+| \<toggle-switch\> | – | change | Formulare, Settings |
+| \<button-set\> | – | change | Formulare, Settings |
+| \<date-selector\> | – | change | Formulare |
+| \<form-button\> | – | click | main, overlay |
+| \<icon-button\> | – | click | Überall |
+| \<value-tile\> | – | – | Dashboard, main |
+| \<app-message\> | – | – | main, overlay |
+| \<label-with-info\> | label, default | info-click | Formulare |
+
+#### **Regeln für Attribut-Werte**
+
+| Komponente | Attribut | Erlaubte Werte / Format |
+| :---- | :---- | :---- |
+| \<form-button\> | type | "submit", "reset", "button" |
+| \<range-slider\> | emoji | Komma-separierte Emoji-Folge (max. 5\) |
+| \<app-message\> | type | "info", "alert" |
+| \<button-set\> | type | "single", "multi" |
+| \<input-field\> | type | "text", "number", "email", "password" |
+
+#### **Datenbindungs-Verhalten (Formulare)**
+
+| Komponente | name-Pflicht | Liefert Wert | Empfängt Wert |
+| :---- | :---- | :---- | :---- |
+| \<input-field\> | ✅ | ✅ (via .value) | ✅ (via .value) |
+| \<textarea-field\> | ✅ | ✅ (via .value) | ✅ (via .value) |
+| \<range-slider\> | ✅ | ✅ (via .value) | ✅ (via .value) |
+| \<toggle-switch\> | ✅ | ✅ (via **.checked**) | ✅ (via **.checked**) |
+| \<button-set\> | ✅ | ✅ (via .value) | ✅ (via .value) |
+| \<date-selector\> | ✅ | ✅ (via .value) | ✅ (via .value) |
+| \<form-button\> | ❌ | ❌ | ❌ |
+| \<icon-button\> | ❌ | ❌ | ❌ |
+
 -----------------------------------------------------------------------------------------------------------------------
 
 <app-header>
@@ -121,15 +166,23 @@ Slider mit Emojis:
 --
 
 <button-set>
-Für eine Mehrfachauswahl, bei der eine oder mehrere Optionen gewählt werden können. Die Optionen werden als komma-separierter String im options-Attribut übergeben.
+Eine Gruppe von Buttons für Ein- oder Mehrfachauswahl.
 
---
+Attribute: label, name, options (komma-separiert), value, type ("multi" oder "single").
 
-<button-set
-  label="Heutiges Training"
-  name="training"
-  options="Brust/Bizeps,Rücken/Trizeps,Beine/Rumpf,Yoga/Meditation,PC-Muskel">
-</button-set>
+Beispiel (Einzelauswahl):
+
+<button-set label="Erektionsqualität" type="single" options="Schwach,Horizontal,Gut,Steil"></button-set>
+
+<date-selector>
+Ein interaktiver Datums-Auswähler mit Pfeilnavigation.
+
+Attribute: value (YYYY-MM-DD).
+Events: date-change.
+
+Beispiel:
+
+<date-selector id="main-date-selector"></date-selector>
 
 --
 
@@ -451,4 +504,65 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initial die Daten für das Standard-Datum (heute) laden
     loadDataForSelectedDate();
+});
+
+--
+
+<label-with-info>
+Ein Label, das um ein klickbares Info-Icon (i) erweitert ist. Perfekt, um dem Benutzer kontextbezogene Hilfe oder Erklärungen in einem modalen Dialog anzubieten, ohne die Benutzeroberfläche zu überladen.
+
+Attribute:
+
+info-title: Der Titel, der im Header des Modals angezeigt wird.
+
+Slots:
+
+slot="label": Der sichtbare Text des Labels.
+
+Default Slot (ohne Namen): Der HTML-Inhalt, der im Modal angezeigt werden soll. Du kannst hier einfachen Text, aber auch komplexe Strukturen wie Tabellen oder Listen einfügen.
+
+Events:
+
+info-click: Wird ausgelöst, wenn der Benutzer auf das (i)-Icon klickt. Das Event-Detail (e.detail) enthält den title und den HTML-content für das Modal.
+
+Anwendungsbeispiel
+
+So wird die Komponente in index.php deklariert und in app.js mit der Modal-Logik verbunden.
+
+1. In index.php:
+
+Der Inhalt für das Modal wird direkt in die Komponente geschrieben. Das hält den Inhalt und das zugehörige Label logisch zusammen.
+
+<label-with-info info-title="Anleitung zur korrekten Messung">
+    <!-- Dies ist das sichtbare Label -->
+    <span slot="label">Penis-Maße (optional)</span>
+
+    <!-- Dies ist der Inhalt, der im Modal angezeigt wird -->
+    <h4>Größenmaße</h4>
+    <p>Hier eine Anleitung zur korrekten Messung deiner Werte:</p>
+    <table>
+        <thead>
+            <tr><th>Merkmal</th><th>Beschreibung</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>Länge (NBP)</td><td>Hautansatz bis Spitze, ohne Druck.</td></tr>
+            <tr><td>Länge (BP)</td><td>Lineal aufs Schambein gepresst.</td></tr>
+            <tr><td>Umfang (erekt)</td><td>Umfang im Schaftmittelpunkt.</td></tr>
+        </tbody>
+    </table>
+</label-with-info>
+
+<!-- Die dazugehörigen Eingabefelder -->
+<input-field name="penislaenge" type="number" step="0.1" suffix="cm"></input-field>
+<input-field name="penisumfang" type="number" step="0.1" suffix="cm"></input-field>
+
+2. In app.js (globale Logik):
+
+Du brauchst nur einen einzigen Event-Listener, der auf alle info-click-Events im Dokument reagiert und das Modal mit den übergebenen Inhalten öffnet.
+
+// Dieser Listener sollte global in deiner app.js platziert werden.
+document.addEventListener('info-click', (e) => {
+    const { title, content } = e.detail;
+    // Die globale Helper-Funktion verwenden, um das Modal zu öffnen.
+    App.alert(content, title);
 });

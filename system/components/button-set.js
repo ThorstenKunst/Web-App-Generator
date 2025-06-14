@@ -1,95 +1,94 @@
 // system/components/button-set.js
 
 class ButtonSet extends HTMLElement {
-  constructor() {
-    super();
-    this.attachShadow({ mode: 'open' });
-  }
+    constructor() {
+        super();
+        this.attachShadow({ mode: 'open' });
+    }
 
-  connectedCallback() {
-    this.render();
-    this.attachEvents();
-  }
+    connectedCallback() {
+        this.render();
+        this.shadowRoot.querySelector('.button-container').addEventListener('click', (e) => {
+            const clickedButton = e.target.closest('button');
+            if (!clickedButton) return;
 
-  get name() {
-    return this.getAttribute('name') || '';
-  }
+            const type = this.getAttribute('type') || 'multi';
 
-  get options() {
-    const raw = this.getAttribute('options') || '';
-    return raw.split(',').map(o => o.trim()).filter(Boolean);
-  }
+            if (type === 'single') {
+                this.shadowRoot.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+                clickedButton.classList.add('active');
+            } else {
+                clickedButton.classList.toggle('active');
+            }
 
-  get value() {
-    return Array.from(this.shadowRoot.querySelectorAll('button.selected'))
-      .map(btn => btn.dataset.value)
-      .join(',');
-  }
+            this.dispatchEvent(new Event('change'));
+        });
+    }
 
-  set value(val) {
-    const values = val.split(',');
-    this.shadowRoot.querySelectorAll('button').forEach(btn => {
-      btn.classList.toggle('selected', values.includes(btn.dataset.value));
-    });
-  }
+    get value() {
+        const activeButtons = this.shadowRoot.querySelectorAll('button.active');
+        const values = Array.from(activeButtons).map(btn => btn.dataset.value);
+        return this.getAttribute('type') === 'single' ? values[0] || '' : values;
+    }
 
-  attachEvents() {
-    this.shadowRoot.querySelectorAll('button').forEach(btn => {
-      btn.addEventListener('click', () => {
-        btn.classList.toggle('selected');
-        this.dispatchEvent(new Event('change'));
-      });
-    });
-  }
+    set value(values) {
+        const type = this.getAttribute('type') || 'multi';
+        const valuesArray = Array.isArray(values) ? values : [values];
 
-  render() {
-    const label = this.getAttribute('label') || '';
-    const name = this.name;
-    const options = this.options;
+        this.shadowRoot.querySelectorAll('button').forEach(btn => {
+            if (valuesArray.includes(btn.dataset.value)) {
+                btn.classList.add('active');
+            } else if (type === 'single') {
+                btn.classList.remove('active');
+            }
+        });
+    }
 
-    this.shadowRoot.innerHTML = `
-      <style>
-        :host {
-          display: block;
-          margin: 16px 0;
-        }
+    render() {
+        const label = this.getAttribute('label') || '';
+        const options = (this.getAttribute('options') || '').split(',');
+        const initialValue = (this.getAttribute('value') || '').split(',');
 
-        .label {
-          font-weight: 500;
-          margin-bottom: 6px;
-          display: block;
-        }
-
-        .button-wrap {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 8px;
-        }
-
-        button {
-          background: #f5f5f5;
-          border: none;
-          border-radius: 10px;
-          padding: 8px 12px;
-          font-size: 0.95rem;
-          cursor: pointer;
-          transition: background 0.2s;
-        }
-
-        button.selected {
-          background: #d0dfff;
-          font-weight: bold;
-        }
-      </style>
-
-      <label class="label">${label}</label>
-      <div class="button-wrap">
-        ${options.map(opt => `
-          <button type="button" data-value="${opt}">${opt}</button>
-        `).join('')}
-      </div>
-    `;
-  }
+        this.shadowRoot.innerHTML = `
+            <style>
+                :host {
+                    display: block;
+                    margin: 12px 0;
+                }
+                .label {
+                    display: block;
+                    font-size: 0.9em;
+                    margin-bottom: 6px;
+                    color: var(--text-color-dark);
+                }
+                .button-container {
+                    display: flex;
+                    flex-wrap: wrap;
+                    gap: 8px;
+                }
+                button {
+                    padding: 8px 16px;
+                    border: 1px solid var(--color-neutral);
+                    border-radius: var(--border-radius);
+                    background-color: var(--background-box-header);
+                    cursor: pointer;
+                    transition: all 0.2s;
+                }
+                button.active {
+                    background-color: var(--primary-color);
+                    color: var(--text-color-light);
+                    border-color: var(--primary-color);
+                }
+            </style>
+            <label class="label">${label}</label>
+            <div class="button-container">
+                ${options.map(opt => `
+                    <button data-value="${opt}" class="${initialValue.includes(opt) ? 'active' : ''}">
+                        ${opt}
+                    </button>`).join('')}
+            </div>
+        `;
+    }
 }
 
 customElements.define('button-set', ButtonSet);

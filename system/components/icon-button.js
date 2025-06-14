@@ -8,7 +8,6 @@ class IconButton extends HTMLElement {
 
   connectedCallback() {
     this.render();
-
     const button = this.shadowRoot.querySelector('button');
     button.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -45,16 +44,14 @@ class IconButton extends HTMLElement {
 
     this.shadowRoot.innerHTML = `
       <style>
-        :host {
-          display: inline-block;
-        }
+        :host { display: inline-block; }
         button {
           all: unset;
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          background: #eee;
-          color: #333;
+          background: var(--background-box);
+          color: var(--text-color-dark);
           border-radius: 50%;
           width: 36px;
           height: 36px;
@@ -63,11 +60,11 @@ class IconButton extends HTMLElement {
           transition: background 0.2s ease;
         }
         button:hover {
-          background: #ccc;
+          background: var(--background-box-header);
         }
         button:disabled {
-          background: #ddd;
-          color: #999;
+          background: var(--background-footer);
+          color: var(--color-neutral);
           cursor: not-allowed;
         }
       </style>

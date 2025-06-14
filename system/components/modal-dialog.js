@@ -8,38 +8,28 @@ class ModalDialog extends HTMLElement {
 
     connectedCallback() {
         this.render();
-        // Event-Listener, um das Modal zu schließen
         this.shadowRoot.querySelector('.backdrop').addEventListener('click', () => this.cancel());
         this.shadowRoot.querySelector('.close-btn').addEventListener('click', () => this.cancel());
         this.shadowRoot.querySelector('.footer').addEventListener('click', (e) => {
-            if (e.target.matches('.confirm-btn')) {
-                this.confirm();
-            }
-            if (e.target.matches('.cancel-btn')) {
-                this.cancel();
-            }
+            if (e.target.matches('.confirm-btn')) this.confirm();
+            if (e.target.matches('.cancel-btn')) this.cancel();
         });
     }
 
-    // Öffnet das Modal
     open() { this.setAttribute('open', ''); }
-    // Schließt das Modal
     close() { this.removeAttribute('open'); }
 
-    // Löst das 'confirm'-Event aus und schließt sich
     confirm() {
         this.dispatchEvent(new Event('confirm'));
         this.close();
     }
-    
-    // Löst das 'cancel'-Event aus und schließt sich
+
     cancel() {
         this.dispatchEvent(new Event('cancel'));
         this.close();
     }
 
     static get observedAttributes() {
-        // Rendert neu, wenn sich diese Attribute ändern
         return ['open', 'title', 'type', 'confirm-label', 'cancel-label'];
     }
 
@@ -48,15 +38,15 @@ class ModalDialog extends HTMLElement {
     }
 
     render() {
-        // Attribute auslesen
         const title = this.getAttribute('title') || 'Hinweis';
-        const type = this.getAttribute('type') || 'alert'; // 'alert' oder 'confirm'
+        const type = this.getAttribute('type') || 'alert';
         const confirmLabel = this.getAttribute('confirm-label') || 'OK';
         const cancelLabel = this.getAttribute('cancel-label') || 'Abbrechen';
 
-        // Entscheiden, welche Buttons angezeigt werden
         const confirmButton = `<button class="confirm-btn">${confirmLabel}</button>`;
-        const cancelButton = type === 'confirm' ? `<button class="cancel-btn secondary">${cancelLabel}</button>` : '';
+        const cancelButton = type === 'confirm'
+            ? `<button class="cancel-btn secondary">${cancelLabel}</button>`
+            : '';
 
         this.shadowRoot.innerHTML = `
             <style>
@@ -71,7 +61,7 @@ class ModalDialog extends HTMLElement {
                 }
                 .backdrop {
                     position: absolute; width: 100%; height: 100%;
-                    background: rgba(0, 0, 0, 0.5);
+                    background: var(--overlay-backdrop);
                     opacity: 0;
                     transition: opacity 0.2s ease-in-out;
                 }
@@ -80,9 +70,9 @@ class ModalDialog extends HTMLElement {
                 }
                 .modal {
                     position: relative;
-                    background: white;
-                    border-radius: 12px;
-                    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+                    background: var(--background-box);
+                    border-radius: var(--border-radius);
+                    box-shadow: var(--box-shadow);
                     width: 90%;
                     max-width: 450px;
                     z-index: 2001;
@@ -98,14 +88,42 @@ class ModalDialog extends HTMLElement {
                     display: flex; justify-content: space-between; align-items: center;
                     padding: 16px;
                     font-weight: bold;
-                    border-bottom: 1px solid #eee;
+                    border-bottom: 1px solid var(--background-box-header);
                 }
-                .close-btn { font-size: 1.5rem; background: none; border: none; cursor: pointer; color: #aaa; }
-                .body { padding: 24px 16px; }
-                .footer { display: flex; justify-content: flex-end; gap: 10px; padding: 16px; background: #f9f9f9; border-top: 1px solid #eee; border-radius: 0 0 12px 12px; }
-                button { padding: 10px 20px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; }
-                .confirm-btn { background: #7f7fd5; color: white; }
-                .secondary { background: #eee; color: #333; }
+                .close-btn {
+                    font-size: 1.5rem;
+                    background: none;
+                    border: none;
+                    cursor: pointer;
+                    color: var(--color-neutral);
+                }
+                .body {
+                    padding: 24px 16px;
+                }
+                .footer {
+                    display: flex;
+                    justify-content: flex-end;
+                    gap: 10px;
+                    padding: 16px;
+                    background: var(--background-box-header);
+                    border-top: 1px solid var(--background-box-header);
+                    border-radius: 0 0 var(--border-radius) var(--border-radius);
+                }
+                button {
+                    padding: 10px 20px;
+                    border-radius: var(--border-radius);
+                    border: none;
+                    font-weight: bold;
+                    cursor: pointer;
+                }
+                .confirm-btn {
+                    background: var(--primary-color);
+                    color: var(--text-color-light);
+                }
+                .secondary {
+                    background: var(--background-box-header);
+                    color: var(--text-color-dark);
+                }
             </style>
             <div class="backdrop"></div>
             <div class="modal">
@@ -114,7 +132,7 @@ class ModalDialog extends HTMLElement {
                     <button class="close-btn">×</button>
                 </div>
                 <div class="body">
-                    <slot></slot> <!-- Hier kommt die Nachricht rein -->
+                    <slot></slot>
                 </div>
                 <div class="footer">
                     ${cancelButton}

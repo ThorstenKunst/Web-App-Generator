@@ -10,33 +10,22 @@ class InputField extends HTMLElement {
         this.render();
         const input = this.shadowRoot.querySelector('input');
 
-        // Leitet das 'input'-Event nach außen weiter, damit die app.js darauf reagieren kann
         input.addEventListener('input', () => {
             this.dispatchEvent(new Event('input'));
         });
-        
-        // REFINEMENT: Event-Listener für die neuen Stepper-Buttons hinzufügen
+
         this.shadowRoot.querySelector('.input-wrapper').addEventListener('click', (e) => {
-            if (e.target.matches('.stepper-up')) {
-                this.step(1);
-            }
-            if (e.target.matches('.stepper-down')) {
-                this.step(-1);
-            }
+            if (e.target.matches('.stepper-up')) this.step(1);
+            if (e.target.matches('.stepper-down')) this.step(-1);
         });
     }
 
-    // Erhöht oder verringert den Wert des Inputs
     step(direction) {
         const input = this.shadowRoot.querySelector('input');
         const step = parseFloat(this.getAttribute('step')) || 1;
         let currentValue = parseFloat(input.value) || 0;
-        
-        // Formatiert das Ergebnis, um Rundungsfehler bei Kommazahlen zu vermeiden
         const decimalPlaces = (step.toString().split('.')[1] || '').length;
         input.value = (currentValue + direction * step).toFixed(decimalPlaces);
-
-        // Löst ein Event aus, um die Änderung bekannt zu geben
         this.dispatchEvent(new Event('input'));
     }
 
@@ -45,7 +34,7 @@ class InputField extends HTMLElement {
     }
 
     set value(val) {
-        if(this.shadowRoot.querySelector('input')) {
+        if (this.shadowRoot.querySelector('input')) {
             this.shadowRoot.querySelector('input').value = val;
         }
     }
@@ -55,38 +44,32 @@ class InputField extends HTMLElement {
         const name = this.getAttribute('name') || '';
         const value = this.getAttribute('value') || '';
         const suffix = this.getAttribute('suffix') || '';
-        // REFINEMENT: Neues 'type'-Attribut, standardmäßig 'text'
         const type = this.getAttribute('type') || 'text';
-        // REFINEMENT: Neues 'step'-Attribut für die Schrittweite
         const step = this.getAttribute('step') || '1';
 
-        // Die Stepper-Buttons werden nur angezeigt, wenn der Typ 'number' ist
-        const stepperHTML = type === 'number' 
+        const stepperHTML = type === 'number'
             ? `<div class="steppers">
-                 <button type="button" class="stepper-up">▲</button>
-                 <button type="button" class="stepper-down">▼</button>
+                   <button type="button" class="stepper-up">▲</button>
+                   <button type="button" class="stepper-down">▼</button>
                </div>`
             : '';
 
         this.shadowRoot.innerHTML = `
             <style>
-                :host {
-                    display: block;
-                    margin: 12px 0;
-                }
+                :host { display: block; margin: 12px 0; }
                 label {
                     display: block;
                     font-size: 0.9em;
                     margin-bottom: 6px;
-                    color: #333;
+                    color: var(--text-color-dark);
                 }
                 .input-wrapper {
                     display: flex;
                     align-items: center;
-                    border: 1px solid #ccc;
-                    border-radius: 6px;
-                    padding: 0 12px; /* Padding links und rechts für Suffix/Stepper */
-                    background: #fff;
+                    border: 1px solid var(--color-neutral);
+                    border-radius: var(--border-radius);
+                    padding: 0 12px;
+                    background: var(--background-box);
                 }
                 input {
                     flex: 1;
@@ -94,12 +77,12 @@ class InputField extends HTMLElement {
                     font-size: 1em;
                     background: transparent;
                     outline: none;
-                    padding: 8px 0; /* Padding innen für Höhe */
-                    width: 100%; /* Wichtig für Flexbox */
+                    padding: 8px 0;
+                    width: 100%;
                 }
                 .suffix {
                     font-size: 0.9em;
-                    color: #666;
+                    color: var(--color-neutral);
                     margin-left: 8px;
                 }
                 .steppers {
@@ -111,7 +94,7 @@ class InputField extends HTMLElement {
                     background: none;
                     border: none;
                     cursor: pointer;
-                    color: #999;
+                    color: var(--color-neutral);
                     font-size: 0.6em;
                     line-height: 1;
                     padding: 2px 4px;
