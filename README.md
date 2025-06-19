@@ -1,300 +1,459 @@
-# Dynamic PHP BaaS Engine
+# Web-App-Generator
 
-Ein minimalistischer Backend-as-a-Service (BaaS) Generator für PHP, MySQL und Vanilla JS. Entwickle datengetriebene Web-Apps blitzschnell, ohne dich um Backend-Logik kümmern zu müssen.
+Ein minimalistischer Backend-as-a-Service (BaaS) Generator für PHP, MySQL und Vanilla JavaScript. Entwickle datengetriebene Web-Apps in Minuten - das Backend wird automatisch aus einer JSON-Konfiguration generiert.
 
-> 🤖 **Hinweis für GPT-Systeme:** Dieses Repository ist vollständig GPT-kompatibel. GPTs können damit eigenständig Web Components, HTML-Formulare und JS-Logik erzeugen – basierend auf `app-config.json`, `System.save()` und `System.load()`. Kein CSS, keine Frameworks, kein Overhead.
+## 🚀 Was ist das?
 
----
+Ein System, das dir die komplette Backend-Entwicklung abnimmt. Du definierst deine Datenstruktur in einer JSON-Datei und schreibst nur noch HTML und JavaScript für deine App-Logik. Der Generator kümmert sich um:
 
-## 🤖 Entwicklungs-Assistent (GPT)
+- ✅ **Datenbank-Setup**: Tabellen werden automatisch erstellt
+- ✅ **CRUD-API**: Create, Read, Update, Delete - alles automatisch
+- ✅ **Authentifizierung**: Login, Registrierung, Sessions
+- ✅ **Rechteverwaltung**: Jeder User sieht nur seine Daten
+- ✅ **Sicherheit**: Prepared Statements, Session-Schutz, Brute-Force-Protection
 
-Um die Entwicklung mit diesem Generator weiter zu beschleunigen, gibt es einen spezialisierten GPT-Assistenten, der vollständig auf das deklarative Baukastensystem trainiert ist.
+## 🎯 Das Mapping-Konzept
 
-Er hilft dir dabei:
-- neue Features zu entwickeln,
-- Datenstrukturen in `app-config.json` korrekt zu definieren,
-- und die passende Logik in `app.js` umzusetzen.
+Das System verbindet Frontend und Backend durch ein cleveres Mapping:
 
-➡️ [Zur vollständigen GPT-Anleitung](https://github.com/ThorstenKunst/Web-App-Generator/tree/main/docs/gpt-instructions.md)
-
----
-
-## ✨ Kernprinzip
-
-Der Generator eliminiert repetitiven Backend-Code. Du (oder ein GPT) konzentrierst dich auf:
-
-- `index.php`, `login.html`: Visuelle Darstellung (HTML)
-- `app.js`: Interaktivität und Business-Logik
-
-Das Backend wird automatisch zur Laufzeit über `api.php` und `app-config.json` generiert.
-
----
-
-## 🚀 Features im Überblick
-
-- ✅ **Backend-Automatisierung**: Datenmodell in `app-config.json` definieren, Setup ausführen – fertig.
-- ✅ **Dynamische CRUD-Logik**: `System.save()` erkennt automatisch INSERT oder UPDATE.
-- ✅ **Benutzerverwaltung**: Login, Einladungssystem, Session-Handling.
-- ✅ **Frontend-Helfer**: `system.js` und `auth.js` erleichtern die Anbindung an die API.
-- ✅ **Mandantenfähig**: Daten werden automatisch auf `user_id` gefiltert.
-- ✅ **Sicher & wartbar**: Prepared Statements, Brute-Force-Schutz, sichere Cookies.
-- ✅ **Debug-Modus**: Umfangreiche Konsolenlogs & Dev-Dashboard.
-
----
-
-## 💪 Setup (Quickstart)
-
-```bash
-# Repo klonen
-git clone https://github.com/ThorstenKunst/Web-App-Generator.git
-
-# Neue App starten
-cp -r template/ meine-neue-app/
-vi app-config.json       # DB-Zugang + Tabellen definieren
-open /system/api.php?action=setup
-vi index.php             # HTML bauen
-vi app.js                # JS-Logik schreiben
+### 1. Form-ID → Tabelle (in app-config.json)
+```json
+"form_mappings": {
+  "meinFormular": "meine_tabelle",  // Form-ID → Tabellen-Name
+  "settingsForm": "user_settings"
+}
 ```
 
----
-
-## 🛠️ Installation & Deployment (Von Null zur Live-App)
-
-### Schritt 1: Lokales Projekt erstellen
-
-```bash
-# Repository auf deinen Computer klonen
-git clone https://github.com/ThorstenKunst/Web-App-Generator.git
-
-# Neue App aus der Vorlage erstellen
-cp -r template/ meine-neue-app/
-cd meine-neue-app/
+### 2. NAME-Attribute → Datenbank-Spalten
+```html
+<!-- WICHTIG: name-Attribute = DB-Spaltenname! -->
+<form id="meinFormular">
+  <input name="titel" type="text">      <!-- → Spalte: titel -->
+  <input name="betrag" type="number">   <!-- → Spalte: betrag -->
+  <textarea name="notizen"></textarea>  <!-- → Spalte: notizen -->
+</form>
 ```
 
-### Schritt 2: Hosting & Server-Setup
+### 3. Der Datenfluss
+```
+HTML Form (name="spaltenname")
+    ↓
+System.collectForm('formId') 
+    ↓
+JavaScript Object { spaltenname: wert }
+    ↓
+System.save('formId', data)
+    ↓
+form_mappings lookup → richtige Tabelle
+    ↓
+SQL INSERT/UPDATE (user_id automatisch!)
+```
 
-- **Webserver mit PHP/MySQL**: z. B. IONOS, Strato, All-Inkl.de
-- **Datenbank anlegen**: im Hoster-Panel
-- **Dateien hochladen**: alle außer `app-config.json` und `generate_codes.php`
-- **Live-Konfiguration**: `app-config.json` direkt auf dem Server mit Zugangsdaten füllen
+## 📁 Projektstruktur
 
-### Schritt 3: Anwendung initialisieren
+```
+meine-app/
+├── index.php          # Deine HTML-Oberfläche
+├── login.html         # Login/Registrierung
+├── app.js            # Deine App-Logik
+├── cache.js          # Cache-Manager
+├── app-config.json   # Konfiguration
+├── css/              # Styles
+│   └── theme.css     # Standard-Theme
+└── system/           # Generator-Kern
+    ├── api.php
+    ├── system.js
+    ├── auth.js
+    └── debug.php
+```
 
-- Setup aufrufen:  `https://deine-domain.de/system/api.php?action=setup`
-- Einladungscodes erzeugen: `generate_codes.php` hochladen, ausführen, dann löschen
+## 🏃‍♂️ Schnellstart
 
-### Schritt 4: Weiterentwickeln
-Die Hauptarbeit findet in index.php und app.js statt.
+### 1. Repository klonen
+```bash
+git clone https://github.com/ThorstenKunst/Web-App-Generator.git
+cd Web-App-Generator
+```
 
-index.php (Die Struktur)
-Hier baust du deine Benutzeroberfläche deklarativ mit den vordefinierten Web Components zusammen. Damit die Komponenten funktionieren, müssen sie über den automatischen loader.php eingebunden werden.
-```php
-<!-- beispiel.index.php -->
+### 2. Neue App erstellen
+```bash
+cp -r template/ meine-app/
+cd meine-app/
+```
+
+### 3. Datenbank konfigurieren
+Bearbeite `app-config.json`:
+```json
+{
+  "app_name": "Meine App",
+  "database": "mysql://user:pass@localhost/dbname",
+  "tables_sql": [
+    "CREATE TABLE IF NOT EXISTS meine_tabelle (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      user_id INT NOT NULL,
+      titel VARCHAR(255),
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )"
+  ],
+  "form_mappings": {
+    "meinFormular": "meine_tabelle"
+  }
+}
+```
+
+### 4. Setup ausführen
+```bash
+# Browser öffnen
+http://localhost/meine-app/system/api.php?action=setup
+```
+
+### 5. App entwickeln!
+
+## 💻 Entwicklung
+
+### HTML schreiben (index.php)
+```html
 <!DOCTYPE html>
-<html lang="de">
+<html>
 <head>
-    <meta charset="UTF-8">
     <title>Meine App</title>
+    <link rel="stylesheet" href="css/theme.css">
 </head>
 <body>
-    <app-header title="Dashboard"></app-header>
+    <header>
+        <div class="container">
+            <h1>Dashboard</h1>
+            <div class="user-info">
+                <span id="userDisplay"></span>
+                <button onclick="System.logout()" class="btn btn-sm">Logout</button>
+            </div>
+        </div>
+    </header>
+    
     <main>
-        <section-box title="Tagesprotokoll">
-            <input-field label="Gewicht" name="gewicht"></input-field>
-        </section-box>
+        <div class="container">
+            <section>
+                <h2>Neuer Eintrag</h2>
+                <form id="meinFormular">
+                    <input type="text" name="titel" required>
+                    <textarea name="beschreibung"></textarea>
+                    <button type="submit">Speichern</button>
+                </form>
+            </section>
+            
+            <section>
+                <h2>Daten</h2>
+                <div id="datenAnzeige" class="data-list"></div>
+            </section>
+        </div>
     </main>
-
-    <!--
-      WICHTIG: Die Ladereihenfolge ist entscheidend!
-      1. Komponenten laden (damit die Tags im HTML bekannt sind)
-      2. System-Bibliothek laden
-      3. Eigene App-Logik laden (die auf alles zugreift)
-    -->
-    <?php include __DIR__ . '/system/loader.php'; ?>
+    
+    <!-- System-Scripts einbinden -->
     <script src="/system/system.js"></script>
+    <script src="/system/auth.js"></script>
+    <script src="cache.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
 ```
 
-app.js (Die Logik)
-Hier schreibst du die JavaScript-Logik, die die Komponenten mit Leben füllt.
-```JS
-document.addEventListener('DOMContentLoaded', () => {
-    // Logik hier...
-});
-```
----
+### JavaScript schreiben (app.js)
+```javascript
+// Cache initialisieren
+const cache = new DataCache();
 
-## 🚀 Best Practices: Datenzugriff effizient gestalten
-
-Statt in jeder Web Component direkt `System.load()` aufzurufen, verwende eine zentrale DataHelper-Klasse, um häufig genutzte Daten (z. B. Profil, heutige Einträge) nur **einmalig** zu laden und lokal zwischenzuspeichern.
-
-### Vorteile:
-
-- Weniger API-Calls
-- Mehr Performance
-- Saubere Komponenten
-
-### Beispiel: Globale DataManager-Klasse
-
-```js
-class DataManager {
-    constructor() {
-        this.userProfile = null;
-    }
-
-    async getProfile() {
-        if (this.userProfile === null) {
-            const result = await System.load('userProfileForm', {});
-            this.userProfile = (result.success && result.data.length > 0) ? result.data[0] : {};
-        }
-        return this.userProfile;
-    }
-
-    async saveProfile(data) {
-        const result = await System.save('userProfileForm', data);
+document.addEventListener('DOMContentLoaded', async () => {
+    // Auth prüfen
+    await System.checkAuth();
+    
+    // Formular-Handler
+    document.getElementById('meinFormular').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        // Daten sammeln
+        const data = System.collectForm('meinFormular');
+        
+        // Speichern (INSERT oder UPDATE automatisch)
+        const result = await System.save('meinFormular', data);
+        
         if (result.success) {
-            this.userProfile = { ...this.userProfile, ...data, id: result.id };
+            alert('Gespeichert!');
+            cache.clear('meine-daten'); // Cache leeren
+            await loadData();
         }
-        return result;
+    });
+    
+    // Daten laden
+    async function loadData() {
+        // Mit Cache
+        const data = await cache.get('meine-daten', async () => {
+            const result = await System.load('meinFormular', {
+                orderBy: 'created_at DESC'
+            });
+            return result.data;
+        });
+        
+        displayData(data);
     }
-}
-
-const DataHelper = new DataManager();
-```
-
-### Verwendung in Web Components
-
-```js
-class ProfileEditor extends HTMLElement {
-    async connectedCallback() {
-        const profile = await DataHelper.getProfile();
-        this.render(profile);
+    
+    // Daten anzeigen
+    function displayData(data) {
+        document.getElementById('datenAnzeige').innerHTML = 
+            data.map(item => `
+                <div>
+                    <h3>${item.titel}</h3>
+                    <p>${item.beschreibung || ''}</p>
+                    <button onclick="editItem(${item.id})">Bearbeiten</button>
+                </div>
+            `).join('');
     }
-
-    render(profile) {
-        this.innerHTML = `<h3>Profil bearbeiten</h3><p>Körpergröße: ${profile.koerpergroesse_cm || 'k.A.'}</p>`;
-    }
-}
-customElements.define('profile-editor', ProfileEditor);
-```
-
----
-
-## 🧠 app-config.json im Detail
-
-Zentrale Konfigurationsdatei – steuert Datenbank, Formulare, Auth.
-
-### Wichtige Felder:
-
-- **"app_name"**: App-Titel
-- **"debug_mode"**: Debug-Interface aktivieren (`true/false`)
-- **"database"**: Verbindungsdaten zur MySQL-DB
-- **"tables_sql"**: Liste von `CREATE TABLE`-Statements
-- **"form_mappings"**: Verknüpft Formulare mit DB-Tabellen (für `System.save()` / `System.load()`)
-
-> 🛡️ Konfigurationsdateien mit Zugangsdaten sollten nie ins Repo – via `.gitignore` ausschließen!
-
----
-
-## 🔐 Sicherheit (automatisch integriert)
-
-- Alle Queries via Prepared Statements
-- Login-Schutz nach 5 Fehlversuchen (IP-Block)
-- Cookies: HTTP-only, SameSite=Lax
-- Zugriff immer auf `user_id` beschränkt
-
----
-
-## 👤 Benutzerverwaltung per Einladung
-
-```php
-// generate_codes.php
-<?php
-$numberOfCodes = 20;
-$config = json_decode(file_get_contents('app-config.json'), true);
-$dbUrl = parse_url($config['database']);
-$db = new mysqli($dbUrl['host'], $dbUrl['user'], $dbUrl['pass'], ltrim($dbUrl['path'], '/'));
-$stmt = $db->prepare("INSERT INTO invitation_codes (code) VALUES (?)");
-for ($i = 0; $i < $numberOfCodes; $i++) {
-    $code = bin2hex(random_bytes(16));
-    $stmt->bind_param("s", $code);
-    $stmt->execute();
-}
-$stmt->close();
-$db->close();
-?>
-```
-
-> Nach Nutzung löschen oder absichern
-
----
-
-## 📦 JavaScript-API (system.js)
-
-```js
-System.checkAuth();                         // Prüft Login-Status
-System.logout();                            // Beendet Session
-System.save('formId', datenObjekt);         // Insert/Update
-System.load('formId', filterObjekt);        // Einträge laden
-System.enableDebug();                       // API-Debug aktivieren
-```
-
-### Beispiel:
-
-```js
-const result = await System.load('dailyForm', { datum: '2025-06-13' });
-console.log(result.data);
-```
-
----
-
-## 🔐 Auth-Logik (auth.js)
-
-```js
-Auth.bindForm('loginForm');                      // Login binden
-Auth.bindForm('registerForm', (res) => {
-  alert(res.message);
-  window.location.href = 'login.html';
+    
+    // Initial laden
+    loadData();
 });
-Auth.updateUserDisplay();                        // Begrüßung aktualisieren
 ```
 
+### Cache Manager (cache.js)
+```javascript
+class DataCache {
+    constructor() {
+        this.memory = {};
+        this.ttl = 5 * 60 * 1000; // 5 Minuten
+    }
+    
+    async get(key, loader) {
+        // Memory Cache prüfen
+        const cached = this.memory[key];
+        if (cached && Date.now() - cached.timestamp < this.ttl) {
+            return cached.data;
+        }
+        
+        // LocalStorage Cache prüfen
+        const stored = System.storage.get(`cache_${key}`);
+        if (stored && Date.now() - stored.timestamp < this.ttl) {
+            this.memory[key] = stored; // In Memory laden
+            return stored.data;
+        }
+        
+        // Neu laden
+        const fresh = await loader();
+        const cacheEntry = {
+            data: fresh,
+            timestamp: Date.now()
+        };
+        
+        // Beide Caches aktualisieren
+        this.memory[key] = cacheEntry;
+        System.storage.set(`cache_${key}`, cacheEntry);
+        
+        return fresh;
+    }
+    
+    clear(key) {
+        if (key) {
+            delete this.memory[key];
+            System.storage.remove(`cache_${key}`);
+        } else {
+            // Alles leeren
+            this.memory = {};
+            // LocalStorage Cache leeren
+            Object.keys(localStorage)
+                .filter(k => k.startsWith('cache_'))
+                .forEach(k => localStorage.removeItem(k));
+        }
+    }
+}
+```
+
+## 🛠️ System-Helper API
+
+### Authentifizierung
+```javascript
+System.checkAuth()          // Prüft Login (leitet um wenn nötig)
+System.getUserInfo()        // Gibt User-Daten zurück
+System.logout()            // Beendet Session
+```
+
+### Daten-Operationen
+```javascript
+// Formular-Daten sammeln
+const data = System.collectForm('formId');
+
+// Speichern (INSERT oder UPDATE)
+const result = await System.save('formId', data);
+
+// Laden mit Filtern
+const result = await System.load('formId', {
+    field: 'value',              // WHERE field = value
+    orderBy: 'created_at DESC',  // Sortierung
+    limit: 10,                   // Anzahl
+    offset: 0                    // Pagination
+});
+
+// Löschen
+const result = await System.delete('formId', id);
+
+// Formular befüllen
+System.fillForm('formId', data);
+```
+
+### Utilities
+```javascript
+System.formatDate(date)           // Datum formatieren
+System.formatDate(date, 'YYYY-MM-DD')  // Mit Format
+System.storage.set('key', value)  // LocalStorage
+System.storage.get('key')         // LocalStorage lesen
+System.storage.remove('key')      // LocalStorage löschen
+System.enableDebug()              // API-Debug aktivieren
+```
+
+## 📋 app-config.json Referenz
+
+```json
+{
+    "app_name": "App-Titel",
+    "debug_mode": true,
+    "database": "mysql://user:pass@host/database",
+    "tables_sql": [
+        "CREATE TABLE IF NOT EXISTS tabelle (...)"
+    ],
+    "form_mappings": {
+        "formId": "tabellenname"
+    },
+    "auth": {
+        "session_lifetime": 86400,
+        "max_login_attempts": 5,
+        "block_duration": 900
+    }
+}
+```
+
+### Wichtige Regeln:
+- **form_mappings**: Verbindet HTML-Formular-IDs mit Datenbank-Tabellen
+- **user_id**: Wird automatisch bei INSERT gesetzt
+- **Unique Keys**: Nutze `UNIQUE KEY` für Duplikat-Vermeidung
+
+## 🔐 Sicherheit
+
+- ✅ Alle Queries mit Prepared Statements
+- ✅ Automatische `user_id` Filterung
+- ✅ Session-basierte Authentifizierung
+- ✅ Brute-Force-Schutz (5 Versuche, dann 15 Min Sperre)
+- ✅ HTTP-Only Cookies mit SameSite=Lax
+- ✅ CSRF-Schutz durch Session-Tokens
+
+## 🐛 Debugging
+
+### Debug-Modus aktivieren
+```json
+// In app-config.json
+"debug_mode": true
+```
+
+### Debug-Dashboard
+Nach Login verfügbar unter: `/system/debug.php`
+
+### Console-Debugging
+```javascript
+System.enableDebug();  // Aktiviert API-Logs in Console
+```
+
+## 🚀 Deployment
+
+### 1. Hosting-Anforderungen
+- PHP 7.4+
+- MySQL 5.7+
+- Apache/Nginx mit .htaccess Support
+
+### 2. Upload
+Alle Dateien hochladen **außer**:
+- `app-config.json` (direkt auf Server erstellen)
+- `generate_codes.php` (nur temporär)
+- `.git/` Ordner
+
+### 3. Live-Konfiguration
+`app-config.json` auf dem Server erstellen mit echten DB-Zugangsdaten.
+
+### 4. Setup ausführen
+```
+https://deine-domain.de/system/api.php?action=setup
+```
+
+## 🤖 GPT-Integration
+
+Dieses System ist perfekt für die Entwicklung mit KI-Assistenten. Sage einfach:
+
+> "Ich nutze den Web-App-Generator. Erstelle mir eine Todo-App mit Kategorien und Prioritäten."
+
+Der Assistent versteht die Struktur und kann komplette Apps generieren.
+
+## 🎨 Theme anpassen
+
+Das mitgelieferte `css/theme.css` bietet ein modernes, responsives Design mit:
+- CSS-Variablen für einfache Anpassungen
+- Dark Mode Support
+- Responsive Layout
+- Utility-Klassen
+
+### Farben ändern:
+```css
+:root {
+    --primary: #007bff;     /* Deine Hauptfarbe */
+    --primary-dark: #0056b3;
+    --success: #28a745;
+    --danger: #dc3545;
+}
+```
+
+### Eigenes CSS hinzufügen:
+Erstelle einfach `css/custom.css` und binde es nach theme.css ein:
+```html
+<link rel="stylesheet" href="css/theme.css">
+<link rel="stylesheet" href="css/custom.css">
+```
+
+## 📝 Beispiel-Apps
+
+### Todo-App
+```javascript
+// Tabelle: todos (id, user_id, titel, erledigt, kategorie, created_at)
+// Form-Mapping: "todoForm": "todos"
+```
+
+### Ausgaben-Tracker
+```javascript
+// Tabelle: expenses (id, user_id, datum, betrag, kategorie, beschreibung)
+// Form-Mapping: "expenseForm": "expenses"
+```
+
+### Gewohnheits-Tracker
+```javascript
+// Tabelle: habits (id, user_id, datum, gewohnheit, erledigt)
+// Form-Mapping: "habitForm": "habits"
+```
+
+## ❓ FAQ
+
+**Warum Vanilla JavaScript?**
+- Keine Dependencies, keine Build-Tools
+- Volle Kontrolle und Transparenz
+- Perfekt für kleine bis mittlere Apps
+
+**Kann ich CSS-Frameworks nutzen?**
+- Klar! Bootstrap, Tailwind etc. einfach einbinden
+
+**Wie erweitere ich die API?**
+- Eigene Endpoints in `system/api.php` ergänzen
+- Custom Actions mit `?action=meine_action`
+
+**Mehrere Tabellen pro App?**
+- Einfach mehrere `CREATE TABLE` in `tables_sql`
+- Verschiedene `form_mappings` definieren
+
+## 📄 Lizenz
+
+MIT License - siehe [LICENSE](LICENSE) Datei
+
 ---
 
-## 🧪 Debug-Dashboard
-
-- `"debug_mode": true` in `app-config.json`
-- Einloggen, dann `/system/debug.php` öffnen
-
-### Zeigt:
-
-- Session-Daten, Tabellenstruktur
-- Form-Mappings
-- Login-Versuche, API-Log, Fehler
-
-> 🖼️ (Platzhalter für Screenshot oder GIF)
-
----
-
-## 🤖 GPT-Use: App bauen in 3 Schritten
-
-1. Tabelle in `app-config.json` definieren
-2. HTML-Formular mit passender `id` schreiben
-3. JavaScript mit `System.save()` und `System.load()` schreiben
-
-👉 GPT kann all das automatisiert erstellen – nutze dieses Repo als Engine.
-
----
-
-## ✅ Status
-
-- Minimalistisch, stabil, offen
-- Ideal für Tools, Coaching-Apps, Dashboards
-- Kein CSS, kein Framework, kein Ballast
-
----
-
-**Lizenz:** MIT | © Thorsten Kunz 2025
-
+💡 **Tipp**: Starte mit dem Template und passe es Schritt für Schritt an!
