@@ -1,209 +1,141 @@
-// Cache initialisieren
-const cache = new DataCache({ debug: false });
+/**
+ * app.js – Hauptcontroller der Anwendung
+ *
+ * Strukturübersicht:
+ * -------------------
+ * - Globale State-Objekte (z.B. Benutzer, Cache)
+ * - Initialisierung nach DOM-Ready:
+ *     - Authentifizierung prüfen
+ *     - Benutzerdaten laden und anzeigen
+ *     - Event-Handler registrieren (zentrale Delegation + gezielte Bindung)
+ *     - Initialdaten aus Cache/API laden
+ *
+ * Funktionale Bereiche:
+ * ---------------------
+ * 1. UI-Initialisierung      → Begrüßung anzeigen
+ * 2. Event-Handling          → Button-Klicks, Overlays, Logout, Speichern
+ * 3. Daten laden             → Tagesprotokoll + Einstellungen (mit Cache)
+ * 4. Daten speichern         → Formulareingaben verarbeiten und speichern
+ * 5. Overlay-Steuerung       → Anzeigen/Verstecken von modalen Ansichten
+ *
+ * Technische Hinweise:
+ * ---------------------
+ * - Kein Inline-JavaScript im HTML
+ * - Alle Dateninteraktionen über System-API
+ * - Daten werden zentral über `System.collectForm()` und `System.save()` gehandhabt
+ * - View-Updates über gezielte DOM-Manipulation (z.B. `System.fillForm()`)
+ * - Cache wird intelligent über `DataCache` verwaltet (RAM + localStorage)
+ *
+ * Ziel:
+ * -----
+ * Klare Trennung von Oberfläche, Logik und Daten.
+ * Skalierbar, wartbar, verständlich.
+ */
+ 
+// ✅ Globale State-Objekte (falls nötig)
+const state = {
+  user: null,
+  cache: new DataCache()
+};
 
-// App-Initialisierung
+// ✅ App-Initialisierung
 document.addEventListener('DOMContentLoaded', async () => {
-    // Auth prüfen - leitet bei fehlendem Login automatisch um
-    await System.checkAuth();
-    
-    // User-Info anzeigen
-    await updateUserDisplay();
-    
-    // Event-Handler einrichten
-    setupEventHandlers();
-    
-    // Initiale Daten laden
-    await loadData();
+  await initializeApp();
 });
 
-// User-Anzeige aktualisieren
-async function updateUserDisplay() {
-    try {
-        const userInfo = await System.getUserInfo();
-        document.getElementById('userDisplay').textContent = `Hallo ${userInfo.username}!`;
-    } catch (error) {
-        console.error('Fehler beim Laden der User-Info:', error);
+async function initializeApp() {
+  await System.checkAuth();
+  state.user = System.getUserInfo();
+  renderUserGreeting(state.user);
+
+  registerGlobalEvents();
+  await loadInitialData();
+}
+// ######################################## 📌 1. UI initialisieren
+
+function renderUserGreeting(user) {
+  const welcome = document.getElementById('userWelcome');
+  welcome.textContent = `Moin ${user.vorname || '👤'}!`;
+}
+// ######################################## 📌 2. Zentrales Event-Handling
+
+function registerGlobalEvents() {
+  // Delegierte Events (Buttons, Overlays, Navigation)
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-action]');
+    if (!btn) return;
+
+    const action = btn.dataset.action;
+    switch (action) {
+      case 'settings':
+        showOverlay('settingsOverlay');
+        break;
+      case 'close-settings':
+        closeOverlay('settingsOverlay');
+        break;
+      case 'close-subsettings':
+        closeOverlay('stammdatenSubpage');
+        break;
+      case 'logout':
+        System.logout();
+        break;
     }
+  });
+
+  // Direkte Events
+  document.getElementById('saveProtokoll')?.addEventListener('click', saveProtokoll);
+  document.getElementById('saveStammdaten')?.addEventListener('click', saveStammdaten);
+}
+// ######################################## 📌 3. Daten laden
+
+async function loadInitialData() {
+  const tagebuch = await state.cache.get('tagebuch', async () => {
+    const result = await System.load('tagebuch', { orderBy: 'created_at DESC', limit: 1 });
+    return result.data;
+  });
+
+  if (tagebuch && tagebuch.length) {
+    System.fillForm('main', tagebuch[0]);
+  }
+
+  const settings = await state.cache.get('settings', async () => {
+    const result = await System.load('settings');
+    return result.data;
+  });
+
+  applySettings(settings[0]);
 }
 
-// Event-Handler Setup
-function setupEventHandlers() {
-    // Haupt-Formular
-    document.getElementById('mainForm').addEventListener('submit', handleFormSubmit);
-    
-    // Datum auf heute setzen
-    const dateInput = document.querySelector('input[name="datum"]');
-    if (dateInput && !dateInput.value) {
-        dateInput.value = System.formatDate(new Date(), 'YYYY-MM-DD');
-    }
+function applySettings(data) {
+  document.getElementById('showSexualActivitiesSettings').checked = !!data.show_sexual_activities;
+}
+// ######################################## 📌 4. Speichern
+
+async function saveProtokoll() {
+  const data = System.collectForm('main');
+  const result = await System.save('tagebuch', data);
+
+  if (result.success) {
+    alert('Tagesprotokoll gespeichert');
+    state.cache.clear('tagebuch');
+  }
 }
 
-// Formular-Submit Handler
-async function handleFormSubmit(e) {
-    e.preventDefault();
-    
-    // Nachricht zurücksetzen
-    showMessage('');
-    
-    try {
-        // Daten mit System.collectForm sammeln
-        const data = System.collectForm('mainForm');
-        
-        // Speichern mit Auto-CRUD (INSERT oder UPDATE)
-        const result = await System.save('mainForm', data);
-        
-        if (result.success) {
-            showMessage('Erfolgreich gespeichert!', 'success');
-            
-            // Cache leeren nach Änderung
-            cache.clear('hauptdaten');
-            
-            // Formular zurücksetzen
-            e.target.reset();
-            
-            // Datum wieder auf heute
-            const dateInput = e.target.querySelector('input[name="datum"]');
-            if (dateInput) {
-                dateInput.value = System.formatDate(new Date(), 'YYYY-MM-DD');
-            }
-            
-            // Daten neu laden
-            await loadData();
-        } else {
-            showMessage('Fehler beim Speichern: ' + result.message, 'error');
-        }
-    } catch (error) {
-        showMessage('Fehler: ' + error.message, 'error');
-        console.error('Submit-Fehler:', error);
-    }
+async function saveStammdaten() {
+  const data = System.collectForm('stammdatenSubpage');
+  const result = await System.save('stammdaten', data);
+
+  if (result.success) {
+    alert('Stammdaten aktualisiert');
+    state.cache.clear('stammdaten');
+  }
+}
+// ######################################## 📌 5. Overlays
+
+function showOverlay(id) {
+  document.getElementById(id)?.classList.remove('hidden');
 }
 
-// Daten laden und anzeigen
-async function loadData() {
-    try {
-        // Mit Cache laden (5 Minuten TTL)
-        const data = await cache.get('hauptdaten', async () => {
-            const result = await System.load('mainForm', {
-                orderBy: 'datum DESC, created_at DESC',
-                limit: 20
-            });
-            
-            if (!result.success) {
-                throw new Error(result.message || 'Fehler beim Laden');
-            }
-            
-            return result.data;
-        });
-        
-        displayData(data);
-    } catch (error) {
-        console.error('Fehler beim Laden:', error);
-        document.getElementById('dataDisplay').innerHTML = 
-            '<div class="error">Fehler beim Laden der Daten</div>';
-    }
-}
-
-// Daten anzeigen
-function displayData(data) {
-    const container = document.getElementById('dataDisplay');
-    
-    if (!data || data.length === 0) {
-        container.innerHTML = '<p class="text-center text-muted">Noch keine Einträge vorhanden</p>';
-        return;
-    }
-    
-    // HTML für jeden Eintrag generieren
-    container.innerHTML = data.map(entry => `
-        <div class="data-item fade-in">
-            <div class="data-item-header">
-                <div class="data-item-content">
-                    <strong>${entry.titel || 'Ohne Titel'}</strong>
-                    <div class="text-muted">
-                        ${System.formatDate(entry.datum)} 
-                        ${entry.kategorie ? `• ${entry.kategorie}` : ''}
-                        ${entry.wert ? `• Wert: ${entry.wert}` : ''}
-                    </div>
-                    ${entry.notizen ? `<p class="mt-1 mb-0">${escapeHtml(entry.notizen)}</p>` : ''}
-                </div>
-                <div class="data-item-actions">
-                    <button onclick="editEntry(${entry.id})" class="btn btn-sm btn-secondary">Bearbeiten</button>
-                    <button onclick="deleteEntry(${entry.id})" class="btn btn-sm btn-danger">Löschen</button>
-                </div>
-            </div>
-        </div>
-    `).join('');
-}
-
-// Eintrag bearbeiten
-window.editEntry = async (id) => {
-    try {
-        // Einzelnen Eintrag laden
-        const result = await System.load('mainForm', { id: id });
-        
-        if (result.success && result.data[0]) {
-            // Formular mit den Daten füllen
-            System.fillForm('mainForm', result.data[0]);
-            
-            // Nach oben scrollen zum Formular
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            
-            showMessage('Eintrag zum Bearbeiten geladen', 'success');
-        }
-    } catch (error) {
-        showMessage('Fehler beim Laden des Eintrags', 'error');
-        console.error('Edit-Fehler:', error);
-    }
-};
-
-// Eintrag löschen
-window.deleteEntry = async (id) => {
-    if (!confirm('Diesen Eintrag wirklich löschen?')) {
-        return;
-    }
-    
-    try {
-        // Löschung über API
-        const result = await System.delete('mainForm', id);
-        
-        if (result.success) {
-            showMessage('Eintrag gelöscht', 'success');
-            cache.clear('hauptdaten'); // Cache leeren
-            await loadData();
-        } else {
-            showMessage('Fehler beim Löschen', 'error');
-        }
-    } catch (error) {
-        showMessage('Fehler beim Löschen', 'error');
-        console.error('Delete-Fehler:', error);
-    }
-};
-
-// Hilfsfunktion: Nachrichten anzeigen
-function showMessage(text, type = '') {
-    const messageBox = document.getElementById('messageBox');
-    if (!text) {
-        messageBox.innerHTML = '';
-        return;
-    }
-    
-    messageBox.innerHTML = `<div class="${type}">${text}</div>`;
-    
-    // Nach 5 Sekunden ausblenden
-    if (type === 'success') {
-        setTimeout(() => {
-            messageBox.innerHTML = '';
-        }, 5000);
-    }
-}
-
-// Hilfsfunktion: HTML escapen
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-// Debug-Helper (nur wenn debug_mode in config aktiv)
-if (window.System && System.isDebugMode) {
-    console.log('Debug-Modus aktiv - Nutze System.enableDebug() für API-Logs');
+function closeOverlay(id) {
+  document.getElementById(id)?.classList.add('hidden');
 }

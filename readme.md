@@ -109,161 +109,63 @@ http://localhost/meine-app/system/api.php?action=setup
 
 ### 5. App entwickeln!
 
-## 💻 Entwicklung
+## 🧠 Architekturprinzipien
+
+Die Businesslogik der App befindet sich vollständig in `app.js`. HTML- und PHP-Dateien enthalten **keine eingebettete JavaScript-Logik**. Folgende Prinzipien gelten:
+
+- **Kein Inline-JavaScript im HTML**  
+  Alle Interaktionen laufen über Event-Handler in `app.js`.
+
+- **Zentrale Event-Delegation**  
+  UI-Aktionen wie Buttons oder Navigation werden über ein zentrales `data-action`-System gesteuert.
+
+- **Formularverarbeitung standardisiert**  
+  Eingaben werden über `System.collectForm()` und `System.save()` verarbeitet.
+
+- **Caching über `DataCache`**  
+  Lokale Zwischenspeicherung von Daten (RAM + localStorage mit TTL).
+
+→ Die **technische Struktur von `app.js`** ist in der Datei selbst dokumentiert (siehe Kopfkommentar).
+
 
 ### HTML schreiben (index.php)
 ```html
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Meine App</title>
-    <link rel="stylesheet" href="css/theme.css">
-</head>
-<body>
-    <header>
-        <div class="container">
-            <h1>Dashboard</h1>
-            <div class="user-info">
-                <span id="userDisplay"></span>
-                <button onclick="System.logout()" class="btn btn-sm">Logout</button>
-            </div>
-        </div>
-    </header>
-    
-    <main>
-        <div class="container">
-            <section>
-                <h2>Neuer Eintrag</h2>
-                <form id="meinFormular">
-                    <input type="text" name="titel" required>
-                    <textarea name="beschreibung"></textarea>
-                    <button type="submit">Speichern</button>
-                </form>
-            </section>
-            
-            <section>
-                <h2>Daten</h2>
-                <div id="datenAnzeige" class="data-list"></div>
-            </section>
-        </div>
-    </main>
-    
-    <!-- System-Scripts einbinden -->
-    <script src="/system/system.js"></script>
-    <script src="/system/auth.js"></script>
-    <script src="cache.js"></script>
-    <script src="app.js"></script>
-</body>
-</html>
+<!-- index.php: Beispiel für HTML-Struktur -->
+<header class="app-header">
+  <h1 id="userWelcome">Moin!</h1>
+  <button class="btn btn-setting" data-action="settings"></button>
+</header>
+
+<main>
+  <section class="section-form">
+    <h2>Körper & Geist</h2>
+    <input type="checkbox" name="morgenerektion" />
+    <input type="range" name="libido" />
+  </section>
+</main>
 ```
+➡️ Siehe `index.php` in /template/boilerplate-index.php
 
-### JavaScript schreiben (app.js)
+### 📦 JavaScript-Logik (`/app.js`)
+
+Die zentrale Steuerung der Anwendung (Events, Formulare, API-Aufrufe).  
+Die Struktur ist im Kopf der Datei dokumentiert.
+
+### Cache Manager (`/cache.js`)
+
+Die App verwendet einen einfachen In-Memory + LocalStorage Cache mit 5 Minuten TTL.
+
+Beispielnutzung:
+
 ```javascript
-// Cache initialisieren
-const cache = new DataCache();
-
-document.addEventListener('DOMContentLoaded', async () => {
-    // Auth prüfen
-    await System.checkAuth();
-    
-    // Formular-Handler
-    document.getElementById('meinFormular').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        // Daten sammeln
-        const data = System.collectForm('meinFormular');
-        
-        // Speichern (INSERT oder UPDATE automatisch)
-        const result = await System.save('meinFormular', data);
-        
-        if (result.success) {
-            alert('Gespeichert!');
-            cache.clear('meine-daten'); // Cache leeren
-            await loadData();
-        }
-    });
-    
-    // Daten laden
-    async function loadData() {
-        // Mit Cache
-        const data = await cache.get('meine-daten', async () => {
-            const result = await System.load('meinFormular', {
-                orderBy: 'created_at DESC'
-            });
-            return result.data;
-        });
-        
-        displayData(data);
-    }
-    
-    // Daten anzeigen
-    function displayData(data) {
-        document.getElementById('datenAnzeige').innerHTML = 
-            data.map(item => `
-                <div>
-                    <h3>${item.titel}</h3>
-                    <p>${item.beschreibung || ''}</p>
-                    <button onclick="editItem(${item.id})">Bearbeiten</button>
-                </div>
-            `).join('');
-    }
-    
-    // Initial laden
-    loadData();
+const daten = await cache.get('tagebuch', async () => {
+  const result = await System.load('tagebuch');
+  return result.data;
 });
-```
 
-### Cache Manager (cache.js)
-```javascript
-class DataCache {
-    constructor() {
-        this.memory = {};
-        this.ttl = 5 * 60 * 1000; // 5 Minuten
-    }
-    
-    async get(key, loader) {
-        // Memory Cache prüfen
-        const cached = this.memory[key];
-        if (cached && Date.now() - cached.timestamp < this.ttl) {
-            return cached.data;
-        }
-        
-        // LocalStorage Cache prüfen
-        const stored = System.storage.get(`cache_${key}`);
-        if (stored && Date.now() - stored.timestamp < this.ttl) {
-            this.memory[key] = stored; // In Memory laden
-            return stored.data;
-        }
-        
-        // Neu laden
-        const fresh = await loader();
-        const cacheEntry = {
-            data: fresh,
-            timestamp: Date.now()
-        };
-        
-        // Beide Caches aktualisieren
-        this.memory[key] = cacheEntry;
-        System.storage.set(`cache_${key}`, cacheEntry);
-        
-        return fresh;
-    }
-    
-    clear(key) {
-        if (key) {
-            delete this.memory[key];
-            System.storage.remove(`cache_${key}`);
-        } else {
-            // Alles leeren
-            this.memory = {};
-            // LocalStorage Cache leeren
-            Object.keys(localStorage)
-                .filter(k => k.startsWith('cache_'))
-                .forEach(k => localStorage.removeItem(k));
-        }
-    }
-}
+cache.clear('tagebuch'); // explizit leeren
 ```
+Der Cache wird zentral über new DataCache() im state initialisiert.
 
 ## 🛠️ System-Helper API
 
