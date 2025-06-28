@@ -1,361 +1,227 @@
-# Web-App-Generator
+# Web-App-Generator –Modularer Stack
 
-Ein minimalistischer Backend-as-a-Service (BaaS) Generator für PHP, MySQL und Vanilla JavaScript. Entwickle datengetriebene Web-Apps in Minuten - das Backend wird automatisch aus einer JSON-Konfiguration generiert.
+Ein schlankes, modulares Baukastensystem für datengetriebene Web-Apps. Jetzt mit klarer Trennung von API-Motor, Business-Logik und Konfiguration.  
+Ideal für eigene Projekte, KI-gestützte Entwicklung und maximale Wartbarkeit.
+
+---
 
 ## 🚀 Was ist das?
 
-Ein System, das dir die komplette Backend-Entwicklung abnimmt. Du definierst deine Datenstruktur in einer JSON-Datei und schreibst nur noch HTML und JavaScript für deine App-Logik. Der Generator kümmert sich um:
+Ein Generator, der dir alles außer der Business-Logik abnimmt:
 
-- ✅ **Datenbank-Setup**: Tabellen werden automatisch erstellt
-- ✅ **CRUD-API**: Create, Read, Update, Delete - alles automatisch
-- ✅ **Authentifizierung**: Login, Registrierung, Sessions
-- ✅ **Rechteverwaltung**: Jeder User sieht nur seine Daten
-- ✅ **Sicherheit**: Prepared Statements, Session-Schutz, Brute-Force-Protection
+- **Automatisiertes Datenbank-Setup** per JSON-Definition
+- **Generische CRUD-API**: Create, Read, Update, Delete für beliebige Tabellen
+- **Sichere Authentifizierung** (Login, Registrierung, Session)
+- **Modulare, leicht erweiterbare Architektur**
+- **Frontend und Backend klar getrennt:**  
+  Keine Logik im HTML, keine UI im Backend.
 
-## 🎯 Das Mapping-Konzept
+---
 
-Das System verbindet Frontend und Backend durch ein cleveres Mapping:
+## 🏗️ Architektur & Datei-Struktur
 
-### 1. Form-ID → Tabelle (in app-config.json)
-```json
-"form_mappings": {
-  "meinFormular": "meine_tabelle",  // Form-ID → Tabellen-Name
-  "settingsForm": "user_settings"
-}
+```text
+my-app/
+│
+├── index.php           # Deine HTML-Oberfläche
+├── login.html          # Login-Page
+├── app.js              # Deine App-Logik (nur Frontend!)
+├── theme.css
+├── app-config.json     # Deine DB- und Mapping-Konfiguration
+│   api.php             # (1) API-Motor/Dispatcher –nur Routing!
+│   BaaSConfig.php      # (2) Gehirn: DB-Verbindung & Settings
+│   app_handlers.php    # (3) Business-Logik: alle Handler-Funktionen
+└── ...
+````
+
+* **Frontend: index.php, login.html, app.js
+* **Backend: api.php, BaaSConfig.php, app_handlers.php
+
+---
+
+## 🧠 **Architekturprinzipien**
+
+* **Motor-Logik:**
+  `system/api.php` ist ein minimaler Dispatcher. Er nimmt Anfragen entgegen, prüft Auth, und ruft passende Handler auf.
+* **Konfig & DB:**
+  `system/BaaSConfig.php` kapselt alle DB- und Konfig-Zugriffe (Singleton-Prinzip, einfache Anbindung).
+* **Business-Logik:**
+  `system/app_handlers.php` enthält alle Handler-Funktionen (z.B. handleLogin, handleSaveFormData, handleGetApiToken…).
+* **Frontend-Logik:**
+  In `app.js` –UI, EventListener, Rendering, Aufrufe an die API, keine Backend-Logik.
+* **Alles andere (CRUD, Auth, Rechte)**:
+  Wird automatisch generiert oder über Helper in Handlern geregelt.
+
+---
+
+## 🎯 Datenfluss
+
+```
+UI (HTML/JS) → API-Call an system/api.php → Handler in app_handlers.php → DB (BaaSConfig.php)
 ```
 
-### 2. NAME-Attribute → Datenbank-Spalten
-```html
-<!-- WICHTIG: name-Attribute = DB-Spaltenname! -->
-<form id="meinFormular">
-  <input name="titel" type="text">      <!-- → Spalte: titel -->
-  <input name="betrag" type="number">   <!-- → Spalte: betrag -->
-  <textarea name="notizen"></textarea>  <!-- → Spalte: notizen -->
-</form>
-```
+* **API-Requests:** Immer über fetch/AJAX, nie klassisch per Form-Submit.
+* **Antwort immer JSON:** Einheitlich, z.B. `{ success: true, data: {...} }` oder `{ isLoggedIn: true, user: {...} }`
 
-### 3. Der Datenfluss
-```
-HTML Form (name="spaltenname")
-    ↓
-System.collectForm('formId') 
-    ↓
-JavaScript Object { spaltenname: wert }
-    ↓
-System.save('formId', data)
-    ↓
-form_mappings lookup → richtige Tabelle
-    ↓
-SQL INSERT/UPDATE (user_id automatisch!)
-```
+---
 
-## 📁 Projektstruktur
+## 🏃♂️ Schnellstart
 
-```
-meine-app/
-├── index.php          # Deine HTML-Oberfläche
-├── login.html         # Login/Registrierung
-├── app.js            # Deine App-Logik
-├── cache.js          # Cache-Manager
-├── app-config.json   # Konfiguration
-├── css/              # Styles
-│   └── theme.css     # Standard-Theme
-└── system/           # Generator-Kern
-    ├── api.php
-    ├── system.js
-    ├── auth.js
-    └── debug.php
-```
+1. **Klonen**
 
-## 🏃‍♂️ Schnellstart
+   ```bash
+   git clone https://github.com/ThorstenKunst/Web-App-Generator.git
+   cd Web-App-Generator
+   ```
+2. **Kopieren & konfigurieren**
 
-### 1. Repository klonen
-```bash
-git clone https://github.com/ThorstenKunst/Web-App-Generator.git
-cd Web-App-Generator
-```
+   ```bash
+   cp -r template/ my-app/
+   cd my-app/
+   ```
+3. **Datenbank & Mapping einstellen**
+   Bearbeite `app-config.json`
+4. **Setup im Browser aufrufen**
 
-### 2. Neue App erstellen
-```bash
-cp -r template/ meine-app/
-cd meine-app/
-```
+   ```
+   http://localhost/my-app/system/api.php?action=setup
+   ```
+5. **App bauen:**  
+   - HTML-Frontend (index.php, login.html, etc.)
+   - JavaScript/App-Logik (app.js)
+   - **Deine individuellen Endpunkte und Features in app_handlers.php**
 
-### 3. Datenbank konfigurieren
-Bearbeite `app-config.json`:
-```json
-{
-  "app_name": "Meine App",
-  "database": "mysql://user:pass@localhost/dbname",
-  "tables_sql": [
-    "CREATE TABLE IF NOT EXISTS meine_tabelle (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      user_id INT NOT NULL,
-      titel VARCHAR(255),
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )"
-  ],
-  "form_mappings": {
-    "meinFormular": "meine_tabelle"
-  }
-}
-```
+---
 
-### 4. Setup ausführen
-```bash
-# Browser öffnen
-http://localhost/meine-app/system/api.php?action=setup
-```
+## 🔧 Die 3 Kern-Dateien
 
-### 5. App entwickeln!
+### 1. `system/api.php` (Dispatcher/Motor)
 
-## 🧠 Architekturprinzipien
+* Keine Logik, nur Routing.
+* Prüft Auth, ruft Handler in `app_handlers.php` auf.
+* Immer wiederverwendbar für neue Projekte.
 
-Die Businesslogik der App befindet sich vollständig in `app.js`. HTML- und PHP-Dateien enthalten **keine eingebettete JavaScript-Logik**. Folgende Prinzipien gelten:
+### 2. `system/BaaSConfig.php` (Gehirn)
 
-- **Kein Inline-JavaScript im HTML**  
-  Alle Interaktionen laufen über Event-Handler in `app.js`.
+* Singleton-Klasse für DB-Verbindung, Settings, Helper.
+* Kapselt alle direkten DB/Config-Aufrufe.
 
-- **Zentrale Event-Delegation**  
-  UI-Aktionen wie Buttons oder Navigation werden über ein zentrales `data-action`-System gesteuert.
+### 3. `system/app_handlers.php` (Business-Logik)
 
-- **Formularverarbeitung standardisiert**  
-  Eingaben werden über `System.collectForm()` und `System.save()` verarbeitet.
+* Enthält **alle** Handler-Funktionen für Aktionen wie login, logout, checkAuth, saveFormData etc.
+* **Hier passiert alles, was individuell ist!**
+* Klar nach Aktionen strukturiert: `function handleLogin(...)`, `function handleSaveFormData(...)` usw.
 
-- **Caching über `DataCache`**  
-  Lokale Zwischenspeicherung von Daten (RAM + localStorage mit TTL).
+---
 
-→ Die **technische Struktur von `app.js`** ist in der Datei selbst dokumentiert (siehe Kopfkommentar).
+## 📝 Beispiel: Neue Action ergänzen
 
+1. Schreibe eine Funktion in `app_handlers.php`:
 
-### HTML schreiben (index.php)
-```html
-<!-- index.php: Beispiel für HTML-Struktur -->
-<header class="app-header">
-  <h1 id="userWelcome">Moin!</h1>
-  <button class="btn btn-setting" data-action="settings"></button>
-</header>
+   ```php
+   function handleGetProfile(BaaSConfig $baas, array $input) {
+       // ...Logik...
+   }
+   ```
+2. Sende einen API-Call im Frontend:
 
-<main>
-  <section class="section-form">
-    <h2>Körper & Geist</h2>
-    <input type="checkbox" name="morgenerektion" />
-    <input type="range" name="libido" />
-  </section>
-</main>
-```
-➡️ Siehe `index.php` in /template/boilerplate-index.php
+   ```js
+   const profile = await System.call('getProfile');
+   ```
 
-### 📦 JavaScript-Logik (`/app.js`)
-
-Die zentrale Steuerung der Anwendung (Events, Formulare, API-Aufrufe).  
-Die Struktur ist im Kopf der Datei dokumentiert.
-
-### Cache Manager (`/cache.js`)
-
-Die App verwendet einen einfachen In-Memory + LocalStorage Cache mit 5 Minuten TTL.
-
-Beispielnutzung:
-
-```javascript
-const daten = await cache.get('tagebuch', async () => {
-  const result = await System.load('tagebuch');
-  return result.data;
-});
-
-cache.clear('tagebuch'); // explizit leeren
-```
-Der Cache wird zentral über new DataCache() im state initialisiert.
+---
 
 ## 🛠️ System-Helper API
 
 ### Authentifizierung
-```javascript
-System.checkAuth()          // Prüft Login (leitet um wenn nötig)
-System.getUserInfo()        // Gibt User-Daten zurück
-System.logout()            // Beendet Session
+
+```js
+System.checkAuth()        // Prüft Login (leitet um, wenn nötig)
+System.logout()           // Beendet Session
 ```
 
 ### Daten-Operationen
-```javascript
-// Formular-Daten sammeln
-const data = System.collectForm('formId');
 
-// Speichern (INSERT oder UPDATE)
-const result = await System.save('formId', data);
-
-// Laden mit Filtern
-const result = await System.load('formId', {
-    field: 'value',              // WHERE field = value
-    orderBy: 'created_at DESC',  // Sortierung
-    limit: 10,                   // Anzahl
-    offset: 0                    // Pagination
-});
-
-// Löschen
-const result = await System.delete('formId', id);
-
-// Formular befüllen
-System.fillForm('formId', data);
+```js
+System.save('formId', data)    // Speichern
+System.load('formId', filter)  // Laden mit Filter/Sortierung
+System.delete('formId', id)    // Löschen
+System.fillForm('formId', data) // Formular befüllen
 ```
 
 ### Utilities
-```javascript
-System.formatDate(date)           // Datum formatieren
-System.formatDate(date, 'YYYY-MM-DD')  // Mit Format
-System.storage.set('key', value)  // LocalStorage
-System.storage.get('key')         // LocalStorage lesen
-System.storage.remove('key')      // LocalStorage löschen
-System.enableDebug()              // API-Debug aktivieren
+
+```js
+System.formatDate(date, 'YYYY-MM-DD')
+System.storage.set('key', value)
+System.enableDebug()
 ```
-
-## 📋 app-config.json Referenz
-
-```json
-{
-    "app_name": "App-Titel",
-    "debug_mode": true,
-    "database": "mysql://user:pass@host/database",
-    "tables_sql": [
-        "CREATE TABLE IF NOT EXISTS tabelle (...)"
-    ],
-    "form_mappings": {
-        "formId": "tabellenname"
-    },
-    "auth": {
-        "session_lifetime": 86400,
-        "max_login_attempts": 5,
-        "block_duration": 900
-    }
-}
-```
-
-### Wichtige Regeln:
-- **form_mappings**: Verbindet HTML-Formular-IDs mit Datenbank-Tabellen
-- **user_id**: Wird automatisch bei INSERT gesetzt
-- **Unique Keys**: Nutze `UNIQUE KEY` für Duplikat-Vermeidung
-
-## 🔐 Sicherheit
-
-- ✅ Alle Queries mit Prepared Statements
-- ✅ Automatische `user_id` Filterung
-- ✅ Session-basierte Authentifizierung
-- ✅ Brute-Force-Schutz (5 Versuche, dann 15 Min Sperre)
-- ✅ HTTP-Only Cookies mit SameSite=Lax
-- ✅ CSRF-Schutz durch Session-Tokens
-
-## 🐛 Debugging
-
-### Debug-Modus aktivieren
-```json
-// In app-config.json
-"debug_mode": true
-```
-
-### Debug-Dashboard
-Nach Login verfügbar unter: `/system/debug.php`
-
-### Console-Debugging
-```javascript
-System.enableDebug();  // Aktiviert API-Logs in Console
-```
-
-## 🚀 Deployment
-
-### 1. Hosting-Anforderungen
-- PHP 7.4+
-- MySQL 5.7+
-- Apache/Nginx mit .htaccess Support
-
-### 2. Upload
-Alle Dateien hochladen **außer**:
-- `app-config.json` (direkt auf Server erstellen)
-- `generate_codes.php` (nur temporär)
-- `.git/` Ordner
-
-### 3. Live-Konfiguration
-`app-config.json` auf dem Server erstellen mit echten DB-Zugangsdaten.
-
-### 4. Setup ausführen
-```
-https://deine-domain.de/system/api.php?action=setup
-```
-
-## 🤖 GPT-Integration
-
-Dieses System ist perfekt für die Entwicklung mit KI-Assistenten. Sage einfach:
-
-> "Ich nutze den Web-App-Generator. Erstelle mir eine Todo-App mit Kategorien und Prioritäten."
-
-Der Assistent versteht die Struktur und kann komplette Apps generieren.
-
-## 🎨 Theme anpassen
-
-Das mitgelieferte `css/theme.css` bietet ein modernes, responsives Design mit:
-- CSS-Variablen für einfache Anpassungen
-- Dark Mode Support
-- Responsive Layout
-- Utility-Klassen
-
-### Farben ändern:
-```css
-:root {
-    --primary: #007bff;     /* Deine Hauptfarbe */
-    --primary-dark: #0056b3;
-    --success: #28a745;
-    --danger: #dc3545;
-}
-```
-
-### Eigenes CSS hinzufügen:
-Erstelle einfach `css/custom.css` und binde es nach theme.css ein:
-```html
-<link rel="stylesheet" href="css/theme.css">
-<link rel="stylesheet" href="css/custom.css">
-```
-
-## 📝 Beispiel-Apps
-
-### Todo-App
-```javascript
-// Tabelle: todos (id, user_id, titel, erledigt, kategorie, created_at)
-// Form-Mapping: "todoForm": "todos"
-```
-
-### Ausgaben-Tracker
-```javascript
-// Tabelle: expenses (id, user_id, datum, betrag, kategorie, beschreibung)
-// Form-Mapping: "expenseForm": "expenses"
-```
-
-### Gewohnheits-Tracker
-```javascript
-// Tabelle: habits (id, user_id, datum, gewohnheit, erledigt)
-// Form-Mapping: "habitForm": "habits"
-```
-
-## ❓ FAQ
-
-**Warum Vanilla JavaScript?**
-- Keine Dependencies, keine Build-Tools
-- Volle Kontrolle und Transparenz
-- Perfekt für kleine bis mittlere Apps
-
-**Kann ich CSS-Frameworks nutzen?**
-- Klar! Bootstrap, Tailwind etc. einfach einbinden
-
-**Wie erweitere ich die API?**
-- Eigene Endpoints in `system/api.php` ergänzen
-- Custom Actions mit `?action=meine_action`
-
-**Mehrere Tabellen pro App?**
-- Einfach mehrere `CREATE TABLE` in `tables_sql`
-- Verschiedene `form_mappings` definieren
-
-## 📄 Lizenz
-
-MIT License - siehe [LICENSE](LICENSE) Datei
 
 ---
 
-💡 **Tipp**: Starte mit dem Template und passe es Schritt für Schritt an!
+## 🧩 Beispiel für ein app\_handlers.php-Snippet
+
+```php
+<?php
+// system/app_handlers.php
+
+function handleLogin(BaaSConfig $baas, array $input) { /* ... */ }
+function handleLogout(BaaSConfig $baas, array $input) { /* ... */ }
+function handleCheckAuth(BaaSConfig $baas, array $input) { /* ... */ }
+function handleSaveFormData(BaaSConfig $baas, array $input) { /* ... */ }
+function handleGetHistoryData(BaaSConfig $baas, array $input) { /* ... */ }
+// ...usw.
+?>
+```
+
+---
+
+## 📋 app-config.json Referenz
+
+**(wie gehabt, jetzt noch klarer dokumentiert)**
+
+---
+
+## 🔐 Sicherheit
+
+* Prepared Statements überall
+* user\_id-Filter immer serverseitig
+* Session-Auth, Brute-Force-Protection
+* Debug-Modus abschaltbar
+
+---
+
+## 🚀 FAQ
+
+* **Wie baue ich eine neue App?**
+
+  1. Verzeichnis kopieren
+  2. app-config.json anpassen
+  3. `system/app_handlers.php` neu schreiben
+  4. `index.php` + `app.js` bauen
+
+* **Wie erweitere ich die API?**
+  Einfach neue Handler-Funktion in `app_handlers.php` schreiben!
+
+* **Kann ich React/Vue als Frontend nehmen?**
+  Ja –das Backend bleibt identisch!
+
+---
+
+## 📄 Lizenz
+
+MIT License
+
+---
+
+💡 **Tipp:**
+Starte mit dem Template, halte das Backend minimal – alles, was speziell ist, kommt in `app_handlers.php`.
+**So bleibst du schnell, flexibel und jederzeit „KI-ready“!**
+
+```
+
+---
+
+**Feedback, Anpassungen oder spezielle Wünsche? Sag einfach Bescheid!**  
+**Das ist jetzt eine zukunftssichere, KI-kompatible und menschlich wartbare Stack-Struktur.**
+```

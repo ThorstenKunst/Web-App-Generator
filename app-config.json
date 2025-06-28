@@ -1,0 +1,23 @@
+{
+  "app_name": "[ -- Hier der Name der App -- ]",
+  "debug_mode": true,  
+  "database": "[ -- Hier die DB-Daten -- ]",
+  "api_keys": {
+    "openai": "sk-proj-[ -- Hier der OpenAI Key -- ]"
+  },
+  "tables_sql": [
+    "CREATE TABLE IF NOT EXISTS users (id INT AUTO_INCREMENT PRIMARY KEY, email VARCHAR(255) UNIQUE NOT NULL, password_hash VARCHAR(255) NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, is_new TINYINT);",
+    "CREATE TABLE IF NOT EXISTS login_attempts (id INT AUTO_INCREMENT PRIMARY KEY, email VARCHAR(255) NOT NULL, ip_address VARCHAR(255), attempted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);",
+    "CREATE TABLE IF NOT EXISTS invitation_codes (id INT AUTO_INCREMENT PRIMARY KEY, code VARCHAR(50) UNIQUE NOT NULL, used_by INT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);",
+    "CREATE TABLE IF NOT EXISTS protokolle (...);",
+    "CREATE TABLE IF NOT EXISTS user_profiles (...);",
+    "CREATE INDEX idx_protokolle_user_datum ON protokolle(user_id, datum DESC);",
+    "CREATE INDEX idx_protokolle_datum ON protokolle(datum);",
+    "CREATE INDEX idx_login_attempts_email ON login_attempts(email);"
+  ],
+  "form_mappings": {
+    "loginForm": "users",
+    "protokollForm": "protokolle",
+    "settingsForm": "user_profiles"
+  }
+}
